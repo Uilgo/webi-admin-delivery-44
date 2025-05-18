@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2, Copy, Move } from "lucide-react";
@@ -151,9 +150,9 @@ const products: Product[] = [
 // Componente de Card de Produto
 function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
   return (
-    <Card className="hover:shadow-md transition-shadow mb-3 animate-fade-in">
-      <CardContent className="p-4">
-        <div className="flex items-center">
+    <Card className="hover:shadow-md transition-shadow mb-3 animate-fade-in h-[160px]">
+      <CardContent className="p-4 h-full">
+        <div className="flex items-center h-full">
           {/* Imagem do produto com bordas arredondadas em 8px */}
           <div className="flex-shrink-0 w-20 h-20 relative">
             <Avatar className="h-full w-full rounded-lg overflow-hidden">
@@ -165,10 +164,10 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
           </div>
           
           {/* Informações do produto */}
-          <div className="flex-grow p-3">
-            <div className="flex flex-col">
+          <div className="flex-grow p-3 overflow-hidden">
+            <div className="flex flex-col h-full">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium text-lg">{product.name}</h3>
+                <h3 className="font-medium text-lg truncate">{product.name}</h3>
                 {product.featured && (
                   <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
                     Destaque
@@ -176,7 +175,7 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
                 )}
               </div>
               
-              <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2 overflow-hidden">{product.description}</p>
               
               <div className="mt-2">
                 <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
@@ -406,8 +405,12 @@ export function UnifiedMenuView() {
     <div className="space-y-8">
       <div className="flex justify-between mb-6">
         <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
-        <Button onClick={handleAddCategory}>
-          <Plus className="h-4 w-4 mr-1" />
+        <Button 
+          variant="outline" 
+          className="border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400"
+          onClick={handleAddCategory}
+        >
+          <Plus className="h-4 w-4 mr-2" />
           Nova Categoria
         </Button>
       </div>
@@ -538,18 +541,6 @@ export function UnifiedMenuView() {
           )}
         </Droppable>
       </DragDropContext>
-      
-      {/* Botão para adicionar nova categoria */}
-      <div className="mt-6">
-        <Button 
-          variant="outline" 
-          className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
-          onClick={handleAddCategory}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar nova categoria
-        </Button>
-      </div>
 
       <CategoryFormModal
         isOpen={isCategoryModalOpen}
