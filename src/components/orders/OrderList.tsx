@@ -10,15 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 // Updated Order interface to match the one in OrderCard.tsx
@@ -73,7 +66,6 @@ const getStatusBadge = (status: string) => {
 
 export function OrderList({ statusFilter, orders, onViewDetails, searchTerm = "" }: OrderListProps) {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-  const [selectedStatus, setSelectedStatus] = useState(statusFilter || "todos");
 
   // Filtragem de ordens baseada nos filtros
   const filteredOrders = useMemo(() => {
@@ -93,53 +85,24 @@ export function OrderList({ statusFilter, orders, onViewDetails, searchTerm = ""
     if (statusFilter) {
       // Se recebemos um statusFilter via props, esse tem prioridade
       result = result.filter(order => order.status === statusFilter);
-    } else if (selectedStatus !== "todos") {
-      // Caso contrário, usamos o selectedStatus do estado local
-      result = result.filter(order => order.status === selectedStatus);
     }
     
     return result;
-  }, [localSearchTerm, selectedStatus, statusFilter, orders, searchTerm]);
+  }, [localSearchTerm, statusFilter, orders, searchTerm]);
 
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <CardTitle className="text-xl">Pedidos</CardTitle>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex items-center relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar pedido ou cliente..." 
-                className="pl-9 md:w-80"
-                value={searchTerm || localSearchTerm}
-                onChange={(e) => setLocalSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              {!statusFilter && (
-                <Select 
-                  value={selectedStatus}
-                  onValueChange={setSelectedStatus}
-                >
-                  <SelectTrigger className="w-full md:w-40">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="aceito">Aceito</SelectItem>
-                    <SelectItem value="em_preparo">Em Preparo</SelectItem>
-                    <SelectItem value="saiu_entrega">Saiu para Entrega</SelectItem>
-                    <SelectItem value="concluido">Concluído</SelectItem>
-                    <SelectItem value="cancelado">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Buscar pedido ou cliente..." 
+              className="pl-9 md:w-80"
+              value={searchTerm || localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+            />
           </div>
         </div>
       </CardHeader>

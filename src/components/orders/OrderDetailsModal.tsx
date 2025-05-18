@@ -31,7 +31,7 @@ export function OrderDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md md:max-w-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-md md:max-w-2xl overflow-y-auto max-h-[90vh]" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -108,20 +108,33 @@ export function OrderDetailsModal({
         <div className="mt-2 pb-4">
           <h4 className="font-medium mb-2">Alterar Status</h4>
           <div className="flex flex-wrap gap-2">
-            {statusList.map((status) => (
-              <Button
-                key={status.id}
-                variant={order.status === status.id ? "default" : "outline"}
-                size="sm"
-                className={
-                  order.status === status.id ? status.color : undefined
-                }
-                onClick={() => onStatusChange(order.id, status.id)}
-                disabled={order.status === status.id}
-              >
-                {status.label}
-              </Button>
-            ))}
+            {statusList.map((status) => {
+              // Get the index of the current status and this status in the list
+              const currentStatusIndex = statusList.findIndex(s => s.id === order.status);
+              const thisStatusIndex = statusList.findIndex(s => s.id === status.id);
+              
+              // Status is unavailable if it's before the current status
+              const isUnavailable = thisStatusIndex < currentStatusIndex;
+              
+              return (
+                <Button
+                  key={status.id}
+                  variant={order.status === status.id ? "default" : isUnavailable ? "outline" : "outline"}
+                  size="sm"
+                  className={
+                    order.status === status.id 
+                      ? status.color 
+                      : isUnavailable 
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" 
+                        : undefined
+                  }
+                  onClick={() => onStatusChange(order.id, status.id)}
+                  disabled={order.status === status.id || isUnavailable}
+                >
+                  {status.label}
+                </Button>
+              );
+            })}
           </div>
         </div>
 

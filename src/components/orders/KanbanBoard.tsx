@@ -32,6 +32,7 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
         fromStatus: order.status,
         toStatus: newStatus,
       });
+      setSelectedOrder(order);
       setIsStatusChangeModalOpen(true);
     }
   };
@@ -57,6 +58,17 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
     ? statusList.find((s) => s.id === statusChange.toStatus)
     : undefined;
 
+  // Get all available statuses for the selected order
+  const getAvailableStatuses = (order: Order | null) => {
+    if (!order) return statusList;
+    
+    // Find current status index
+    const statusIndex = statusList.findIndex(s => s.id === order.status);
+    
+    // Return all statuses, but we'll mark some as unavailable in the modal
+    return statusList;
+  };
+
   return (
     <div className="overflow-auto pb-4">
       <div className="flex space-x-4 min-h-[70vh]">
@@ -80,7 +92,7 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
                     order={order}
                     statusList={statusList}
                     onStatusChange={handleStatusChange}
-                    onViewDetails={handleOpenDetails}
+                    onViewDetails={() => handleOpenDetails(order)}
                   />
                 ))}
                 {filteredOrders.length === 0 && (
@@ -98,7 +110,7 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         order={selectedOrder}
-        statusList={statusList}
+        statusList={selectedOrder ? getAvailableStatuses(selectedOrder) : []}
         onStatusChange={handleStatusChange}
       />
 
