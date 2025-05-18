@@ -16,6 +16,7 @@ import { OrderItemsTable } from "./OrderItemsTable";
 import { OrderStatusSelector } from "./OrderStatusSelector";
 import { useState } from "react";
 import { StatusChangeConfirmation } from "./StatusChangeConfirmation";
+import { InvalidStatusChangeModal } from "./InvalidStatusChangeModal";
 import { toast } from "@/hooks/use-toast";
 
 interface OrderDetailsModalProps {
@@ -34,7 +35,9 @@ export function OrderDetailsModal({
   onStatusChange,
 }: OrderDetailsModalProps) {
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [invalidStatusOpen, setInvalidStatusOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<string | null>(null);
+  const [nextValidStatus, setNextValidStatus] = useState<OrderStatus | undefined>(undefined);
   
   if (!order) return null;
 
@@ -49,11 +52,13 @@ export function OrderDetailsModal({
       
       // Não permitir pular etapas (exceto para cancelar)
       if (selectedStatus !== "cancelado" && selectedStatusIndex - currentStatusIndex > 1) {
-        toast({
-          title: "Progressão de status inválida",
-          description: "Não é possível pular etapas no fluxo de pedidos",
-          variant: "destructive",
-        });
+        // Obter o próximo status válido na sequência
+        const normalStatusFlow = statusList.filter(s => s.id !== "cancelado");
+        const nextValidStatusObj = normalStatusFlow[currentStatusIndex + 1];
+        setNextValidStatus(nextValidStatusObj);
+        
+        // Abrir o modal de erro em vez de mostrar um toast
+        setInvalidStatusOpen(true);
         return;
       }
       
@@ -181,6 +186,13 @@ export function OrderDetailsModal({
         orderId={order.id}
         fromStatus={currentStatus}
         toStatus={newStatus ? statusList.find(s => s.id === newStatus) : undefined}
+      />
+      
+      <InvalidStatusChangeModal
+        isOpen={invalidStatusOpen}
+        onClose={() => setInvalidStatusOpen(false)}
+        currentStatus={currentStatus}
+        nextValidStatus={nextValidStatus}
       />
     </>
   );
