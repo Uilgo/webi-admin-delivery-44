@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -17,7 +16,7 @@ import { format } from "date-fns";
 import { ProductFormModal } from "./ProductFormModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
-import { Trash2, Edit } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 
 export interface Product {
   id: string;
@@ -215,7 +214,10 @@ export function ProductList() {
             onSort={setSortBy}
             onFilter={setFilter}
           />
-          <Button onClick={handleAddProduct}>Novo Produto</Button>
+          <Button onClick={handleAddProduct}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Produto
+          </Button>
         </div>
         
         <div className="rounded-md border">
@@ -269,14 +271,10 @@ export function ProductList() {
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">{format(product.createdAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="hidden lg:table-cell">{format(product.updatedAt, 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>
                       <Edit className="h-4 w-4 mr-1" />
                       Editar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product)}>
-                      <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                      <span className="text-destructive">Excluir</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -291,6 +289,7 @@ export function ProductList() {
         onClose={() => setIsModalOpen(false)}
         product={editingProduct}
         onSave={handleSaveProduct}
+        onDelete={editingProduct ? () => handleDeleteProduct(editingProduct) : undefined}
       />
 
       <DeleteConfirmationModal 

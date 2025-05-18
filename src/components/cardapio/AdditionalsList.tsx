@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -16,7 +15,7 @@ import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { AdditionalFormModal } from "./AdditionalFormModal";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
-import { Trash2, Edit } from "lucide-react";
+import { Edit, Plus, FolderPlus } from "lucide-react";
 
 export interface Additional {
   id: string;
@@ -97,6 +96,7 @@ export function AdditionalsList() {
   const [additionalList, setAdditionalList] = useState<Additional[]>(additionals);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [additionalToDelete, setAdditionalToDelete] = useState<Additional | null>(null);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
   const filteredAdditionals = useMemo(() => {
     let result = [...additionalList];
@@ -190,6 +190,10 @@ export function AdditionalsList() {
     ));
   };
 
+  const handleAddGroup = () => {
+    setIsGroupModalOpen(true);
+  };
+
   return (
     <Card>
       <div className="p-6">
@@ -200,7 +204,16 @@ export function AdditionalsList() {
             onSort={setSortBy}
             onFilter={setFilter}
           />
-          <Button onClick={handleAddAdditional}>Novo Adicional</Button>
+          <div className="flex gap-2">
+            <Button onClick={handleAddGroup} variant="outline">
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Novo Grupo
+            </Button>
+            <Button onClick={handleAddAdditional}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Adicional
+            </Button>
+          </div>
         </div>
         
         <div className="rounded-md border">
@@ -237,14 +250,10 @@ export function AdditionalsList() {
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">{format(item.createdAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="hidden lg:table-cell">{format(item.updatedAt, 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => handleEditAdditional(item)}>
                       <Edit className="h-4 w-4 mr-1" />
                       Editar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteAdditional(item)}>
-                      <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                      <span className="text-destructive">Excluir</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -259,6 +268,7 @@ export function AdditionalsList() {
         onClose={() => setIsModalOpen(false)}
         additional={editingAdditional}
         onSave={handleSaveAdditional}
+        onDelete={editingAdditional ? () => handleDeleteAdditional(editingAdditional) : undefined}
       />
 
       <DeleteConfirmationModal 

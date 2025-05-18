@@ -1,7 +1,5 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 interface MenuTabsProps {
   children: React.ReactNode;
@@ -12,10 +10,6 @@ export function MenuTabs({ children }: MenuTabsProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gerenciar Cardápio</h2>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Item
-        </Button>
       </div>
       
       <Tabs defaultValue="categorias" className="w-full">

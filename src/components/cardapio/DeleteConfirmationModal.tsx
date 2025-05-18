@@ -16,7 +16,7 @@ interface DeleteConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   itemName: string;
-  itemType: "categoria" | "produto" | "adicional";
+  itemType: "categoria" | "produto" | "adicional" | "grupo";
 }
 
 export function DeleteConfirmationModal({
@@ -26,13 +26,21 @@ export function DeleteConfirmationModal({
   itemName,
   itemType,
 }: DeleteConfirmationModalProps) {
+  // Determinar o artigo baseado no tipo do item
+  const getArticle = () => {
+    if (itemType === "categoria" || itemType === "grupo") {
+      return "a";
+    }
+    return "o";
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir {itemType}</AlertDialogTitle>
           <AlertDialogDescription>
-            Você tem certeza que deseja excluir {itemType === "categoria" ? "a" : "o"} {itemType}{" "}
+            Você tem certeza que deseja excluir {getArticle()} {itemType}{" "}
             <strong>{itemName}</strong>? Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
