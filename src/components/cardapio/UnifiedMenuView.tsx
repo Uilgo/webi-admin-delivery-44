@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2, Copy, Move } from "lucide-react";
@@ -11,19 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Product } from "./ProductList";
+import { Category } from "./CategoryList";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-
-// Category interface definition
-export interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  active: boolean;
-  order: number;
-  products: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // Dados de exemplo de categorias (igual ao CategoryList.tsx)
 const categories: Category[] = [
