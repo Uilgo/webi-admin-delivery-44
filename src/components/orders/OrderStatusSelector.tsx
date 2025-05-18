@@ -40,8 +40,10 @@ export function OrderStatusSelector({
         </SelectTrigger>
         <SelectContent>
           {normalStatusList.map((status, index) => {
-            // Status is unavailable if it's before the current status
-            const isUnavailable = index < currentStatusIndex;
+            // Status is unavailable if:
+            // 1. It's before the current status OR
+            // 2. It's more than one step ahead of the current status (exceto para o cancelado)
+            const isUnavailable = index < currentStatusIndex || (index > currentStatusIndex + 1);
             
             return (
               <SelectItem 
@@ -55,6 +57,17 @@ export function OrderStatusSelector({
               </SelectItem>
             );
           })}
+          
+          {/* O status "cancelado" sempre está disponível exceto quando o pedido já está concluído */}
+          {currentStatus !== "cancelado" && currentStatus !== "concluido" && (
+            <SelectItem 
+              key="cancelado" 
+              value="cancelado"
+              className="text-red-600"
+            >
+              Cancelado
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
     </div>

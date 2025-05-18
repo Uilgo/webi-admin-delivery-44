@@ -43,9 +43,29 @@ export function OrderDetailsModal({
   // Função para lidar com a alteração de status via select
   const handleStatusChange = (selectedStatus: string) => {
     if (selectedStatus !== order.status) {
+      // Verificar se a progressão de status é válida
+      const currentStatusIndex = getStatusIndex(order.status);
+      const selectedStatusIndex = getStatusIndex(selectedStatus);
+      
+      // Não permitir pular etapas (exceto para cancelar)
+      if (selectedStatus !== "cancelado" && selectedStatusIndex - currentStatusIndex > 1) {
+        toast({
+          title: "Progressão de status inválida",
+          description: "Não é possível pular etapas no fluxo de pedidos",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setNewStatus(selectedStatus);
       setConfirmationOpen(true);
     }
+  };
+  
+  // Função para obter o índice do status na sequência normal
+  const getStatusIndex = (statusId: string): number => {
+    const normalStatusFlow = statusList.filter(s => s.id !== "cancelado").map(s => s.id);
+    return normalStatusFlow.indexOf(statusId);
   };
   
   // Função para confirmar a alteração de status
@@ -141,7 +161,7 @@ export function OrderDetailsModal({
                 size="sm" 
                 onClick={handleCancelOrder}
                 disabled={isCancelDisabled}
-                className={isCancelDisabled ? "bg-opacity-50 hover:bg-opacity-50" : ""}
+                className={`${isCancelDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <X className="h-4 w-4 mr-1" />
                 Cancelar Pedido
