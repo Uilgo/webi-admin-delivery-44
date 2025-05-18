@@ -153,13 +153,13 @@ export function OrderDetailsModal({
                 />
               </div>
               
-              <div className="mt-auto pt-4 flex flex-col gap-2">
+              <div className="mt-auto pt-4 flex flex-row gap-2 justify-end">
                 {isOrderCancelled ? (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={handleRestoreOrder}
-                    className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800 self-end"
+                    className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800"
                   >
                     <RotateCcw className="h-4 w-4 mr-1" />
                     Restaurar Pedido
@@ -170,13 +170,13 @@ export function OrderDetailsModal({
                     size="sm" 
                     onClick={handleCancelOrder}
                     disabled={isCancelDisabled}
-                    className={`${isCancelDisabled ? "opacity-50 cursor-not-allowed" : ""} self-end`}
+                    className={`${isCancelDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <X className="h-4 w-4 mr-1" />
                     Cancelar Pedido
                   </Button>
                 )}
-                <Button variant="outline" onClick={onClose} className="self-end">
+                <Button variant="outline" onClick={onClose}>
                   Fechar
                 </Button>
               </div>

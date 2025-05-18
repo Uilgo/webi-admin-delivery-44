@@ -77,11 +77,11 @@ export function OrderStatusStepper({
         </div>
       </div>
       
-      {/* Botão para avançar para o próximo status */}
+      {/* Botão para avançar para o próximo status - Adicionado mt-8 (32px) de espaçamento */}
       {!isCancelled && !isCompleted && (
         <Button 
           onClick={onRequestNextStatus} 
-          className="w-full max-w-xs mt-2"
+          className="w-full max-w-xs mt-8"
           variant="default"
           disabled={disableProgress}
         >
