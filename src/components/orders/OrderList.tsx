@@ -24,7 +24,7 @@ import { useMemo, useState } from "react";
 interface Order {
   id: string;
   customer: string;
-  status: "recebido" | "em preparo" | "pronto" | "finalizado" | "cancelado";
+  status: string;
   total: string;
   date: string;
   payment: string;
@@ -34,106 +34,37 @@ interface Order {
 
 interface OrderListProps {
   statusFilter?: string;
+  orders: Order[];
+  onViewDetails: (orderId: string) => void;
 }
 
-const orders: Order[] = [
-  {
-    id: "#42512",
-    customer: "Ana Silva",
-    status: "em preparo",
-    total: "R$ 57,90",
-    date: "15/05/2025 19:45",
-    payment: "Cartão de Crédito",
-    items: 3,
-    isRegistered: true,
-  },
-  {
-    id: "#42511",
-    customer: "Carlos Ferreira",
-    status: "recebido",
-    total: "R$ 42,50",
-    date: "15/05/2025 19:30",
-    payment: "Pix",
-    items: 2,
-    isRegistered: false,
-  },
-  {
-    id: "#42510",
-    customer: "Juliana Mendes",
-    status: "finalizado",
-    total: "R$ 86,00",
-    date: "15/05/2025 19:15",
-    payment: "Dinheiro",
-    items: 5,
-    isRegistered: true,
-  },
-  {
-    id: "#42509",
-    customer: "Roberto Alves",
-    status: "pronto",
-    total: "R$ 34,90",
-    date: "15/05/2025 19:00",
-    payment: "Cartão de Débito",
-    items: 1,
-    isRegistered: false,
-  },
-  {
-    id: "#42508",
-    customer: "Maria Oliveira",
-    status: "cancelado",
-    total: "R$ 65,80",
-    date: "15/05/2025 18:45",
-    payment: "Pix",
-    items: 4,
-    isRegistered: true,
-  },
-  {
-    id: "#42507",
-    customer: "Paulo Santos",
-    status: "finalizado",
-    total: "R$ 53,40",
-    date: "15/05/2025 18:30",
-    payment: "Cartão de Crédito",
-    items: 3,
-    isRegistered: true,
-  },
-  {
-    id: "#42506",
-    customer: "Fernanda Lima",
-    status: "finalizado",
-    total: "R$ 78,20",
-    date: "15/05/2025 18:15",
-    payment: "Cartão de Crédito",
-    items: 4,
-    isRegistered: false,
-  },
-];
-
-const getStatusBadge = (status: Order["status"]) => {
+const getStatusBadge = (status: string) => {
   const variants = {
-    recebido: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-    "em preparo": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-    pronto: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-    finalizado: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    pendente: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    aceito: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    em_preparo: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    saiu_entrega: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+    concluido: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
     cancelado: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   };
 
   const labels = {
-    recebido: "Recebido",
-    "em preparo": "Em Preparo",
-    pronto: "Pronto",
-    finalizado: "Finalizado",
+    pendente: "Pendente",
+    aceito: "Aceito",
+    em_preparo: "Em Preparo",
+    saiu_entrega: "Saiu para Entrega",
+    concluido: "Concluído",
     cancelado: "Cancelado",
   };
 
   return (
-    <Badge className={variants[status]} variant="outline">
-      {labels[status]}
+    <Badge className={variants[status] || "bg-gray-100"} variant="outline">
+      {labels[status] || status}
     </Badge>
   );
 };
 
-export function OrderList({ statusFilter }: OrderListProps) {
+export function OrderList({ statusFilter, orders, onViewDetails }: OrderListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState(statusFilter || "todos");
 
@@ -151,13 +82,16 @@ export function OrderList({ statusFilter }: OrderListProps) {
     }
     
     // Filtrar por status
-    const status = statusFilter || selectedStatus;
-    if (status !== "todos") {
-      result = result.filter(order => order.status === status);
+    if (statusFilter) {
+      // Se recebemos um statusFilter via props, esse tem prioridade
+      result = result.filter(order => order.status === statusFilter);
+    } else if (selectedStatus !== "todos") {
+      // Caso contrário, usamos o selectedStatus do estado local
+      result = result.filter(order => order.status === selectedStatus);
     }
     
     return result;
-  }, [searchTerm, selectedStatus, statusFilter]);
+  }, [searchTerm, selectedStatus, statusFilter, orders]);
 
   return (
     <Card>
@@ -184,10 +118,11 @@ export function OrderList({ statusFilter }: OrderListProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="recebido">Recebido</SelectItem>
-                    <SelectItem value="em preparo">Em Preparo</SelectItem>
-                    <SelectItem value="pronto">Pronto</SelectItem>
-                    <SelectItem value="finalizado">Finalizado</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="aceito">Aceito</SelectItem>
+                    <SelectItem value="em_preparo">Em Preparo</SelectItem>
+                    <SelectItem value="saiu_entrega">Saiu para Entrega</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
                     <SelectItem value="cancelado">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
@@ -228,7 +163,13 @@ export function OrderList({ statusFilter }: OrderListProps) {
                   <TableCell className="hidden md:table-cell">{order.payment}</TableCell>
                   <TableCell>{order.total}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Detalhes</Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => onViewDetails(order.id)}
+                    >
+                      Detalhes
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

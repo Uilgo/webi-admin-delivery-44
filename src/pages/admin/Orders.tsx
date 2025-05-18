@@ -1,13 +1,23 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { OrderList } from "@/components/orders/OrderList";
 import { OrderViewSelector } from "@/components/orders/OrderViewSelector";
 import { OrderCard, OrderStatus, Order } from "@/components/orders/OrderCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderDetailsModal } from "@/components/orders/OrderDetailsModal";
 import { StatusChangeConfirmation } from "@/components/orders/StatusChangeConfirmation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search, Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Lista de status para pedidos
+// Lista de status para pedidos em ordem de progressão
 const orderStatusList: OrderStatus[] = [
   { id: "pendente", label: "Pendente", color: "bg-gray-100 text-gray-800" },
   { id: "aceito", label: "Aceito", color: "bg-blue-100 text-blue-800" },
@@ -109,6 +119,27 @@ const mockOrders = [
   },
 ];
 
+// Função para determinar quais status podem ser selecionados a partir de um status atual
+const getAvailableStatuses = (currentStatus: string): OrderStatus[] => {
+  // Lógica para definir a progressão de status permitida
+  const statusIndex = orderStatusList.findIndex(s => s.id === currentStatus);
+  
+  if (currentStatus === "cancelado") {
+    // Pedido cancelado não pode mudar para outros status
+    return [orderStatusList.find(s => s.id === "cancelado")!];
+  } 
+  else if (currentStatus === "concluido") {
+    // Pedido concluído só pode ser cancelado
+    return [
+      orderStatusList.find(s => s.id === "concluido")!,
+      orderStatusList.find(s => s.id === "cancelado")!
+    ];
+  }
+  
+  // Retorna o status atual e todos os status posteriores (sem os anteriores)
+  return orderStatusList.filter((_, index) => index >= statusIndex || index === orderStatusList.length - 1);
+};
+
 const Orders = () => {
   const [view, setView] = useState<"card" | "list">("card");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -119,14 +150,41 @@ const Orders = () => {
     fromStatus: string;
     toStatus: string;
   } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("todos");
   
+  // Filtrar pedidos com base no termo de busca e no status ativo
+  const filteredOrders = useMemo(() => {
+    let result = [...mockOrders];
+    
+    // Aplicar filtro de busca
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        order => order.id.toLowerCase().includes(term) || 
+                order.customer.toLowerCase().includes(term) ||
+                order.address.toLowerCase().includes(term)
+      );
+    }
+    
+    // Aplicar filtro de status (se não for "todos")
+    if (activeTab !== "todos") {
+      result = result.filter(order => order.status === activeTab);
+    }
+    
+    return result;
+  }, [searchTerm, activeTab, mockOrders]);
+
   const handleViewChange = (newView: "card" | "list") => {
     setView(newView);
   };
 
-  const handleViewDetails = (order: Order) => {
-    setSelectedOrder(order);
-    setIsDetailsModalOpen(true);
+  const handleViewDetails = (orderId: string) => {
+    const order = mockOrders.find((o) => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setIsDetailsModalOpen(true);
+    }
   };
 
   const handleStatusChange = (orderId: string, newStatus: string) => {
@@ -155,12 +213,28 @@ const Orders = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h2 className="text-2xl font-bold">Pedidos</h2>
-        <OrderViewSelector view={view} onViewChange={handleViewChange} />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex items-center relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Buscar pedido, cliente ou endereço..." 
+              className="pl-9 w-full md:w-80"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <OrderViewSelector view={view} onViewChange={handleViewChange} />
+        </div>
       </div>
 
-      <Tabs defaultValue="todos" className="w-full">
+      <Tabs 
+        defaultValue="todos" 
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value)} 
+        className="w-full"
+      >
         <TabsList className="grid grid-cols-7 mb-4">
           <TabsTrigger value="todos">Todos</TabsTrigger>
           <TabsTrigger value="pendente">Pendente</TabsTrigger>
@@ -173,16 +247,19 @@ const Orders = () => {
 
         <TabsContent value="todos">
           {view === "list" ? (
-            <OrderList />
+            <OrderList 
+              orders={filteredOrders} 
+              onViewDetails={handleViewDetails} 
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockOrders.map((order) => (
+              {filteredOrders.map((order) => (
                 <OrderCard 
                   key={order.id} 
                   order={order} 
                   statusList={orderStatusList} 
                   onStatusChange={handleStatusChange} 
-                  onViewDetails={handleViewDetails}
+                  onViewDetails={() => handleViewDetails(order.id)}
                 />
               ))}
             </div>
@@ -192,10 +269,14 @@ const Orders = () => {
         {orderStatusList.map((status) => (
           <TabsContent key={status.id} value={status.id}>
             {view === "list" ? (
-              <OrderList statusFilter={status.id} />
+              <OrderList 
+                orders={filteredOrders} 
+                statusFilter={status.id} 
+                onViewDetails={handleViewDetails} 
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockOrders
+                {filteredOrders
                   .filter((order) => order.status === status.id)
                   .map((order) => (
                     <OrderCard 
@@ -203,7 +284,7 @@ const Orders = () => {
                       order={order} 
                       statusList={orderStatusList} 
                       onStatusChange={handleStatusChange}
-                      onViewDetails={handleViewDetails}
+                      onViewDetails={() => handleViewDetails(order.id)}
                     />
                   ))}
               </div>
@@ -216,7 +297,7 @@ const Orders = () => {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         order={selectedOrder}
-        statusList={orderStatusList}
+        statusList={getAvailableStatuses(selectedOrder?.status || "")}
         onStatusChange={handleStatusChange}
       />
 
