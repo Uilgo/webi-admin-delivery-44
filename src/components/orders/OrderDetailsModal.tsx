@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -142,7 +141,7 @@ export function OrderDetailsModal({
             
             {/* Coluna da direita - Stepper e ações */}
             <div className="flex flex-col justify-between">
-              <div className="bg-muted/30 p-4 rounded-lg">
+              <div className="bg-muted/30 p-6 rounded-lg">
                 <h4 className="font-medium mb-4 text-center">Status do Pedido</h4>
                 
                 <OrderStatusStepper
