@@ -31,7 +31,7 @@ export function OrderDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md md:max-w-2xl overflow-y-auto max-h-[90vh]" hideCloseButton>
+      <DialogContent className="max-w-md md:max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -119,19 +119,21 @@ export function OrderDetailsModal({
               return (
                 <Button
                   key={status.id}
-                  variant={order.status === status.id ? "default" : isUnavailable ? "outline" : "outline"}
+                  variant={order.status === status.id ? "default" : "outline"}
                   size="sm"
                   className={
                     order.status === status.id 
                       ? status.color 
                       : isUnavailable 
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60" 
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" 
                         : undefined
                   }
-                  onClick={() => onStatusChange(order.id, status.id)}
+                  onClick={() => !isUnavailable && onStatusChange(order.id, status.id)}
                   disabled={order.status === status.id || isUnavailable}
+                  title={isUnavailable ? "Não é possível retornar a um status anterior" : undefined}
                 >
                   {status.label}
+                  {isUnavailable && <span className="ml-1 text-xs">(bloqueado)</span>}
                 </Button>
               );
             })}

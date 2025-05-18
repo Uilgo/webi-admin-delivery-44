@@ -10,9 +10,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
 
 // Updated Order interface to match the one in OrderCard.tsx
 interface Order {
@@ -65,46 +62,29 @@ const getStatusBadge = (status: string) => {
 };
 
 export function OrderList({ statusFilter, orders, onViewDetails, searchTerm = "" }: OrderListProps) {
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-
   // Filtragem de ordens baseada nos filtros
-  const filteredOrders = useMemo(() => {
-    let result = [...orders];
-    
-    // Filtrar por termo de busca (pode vir do prop ou do estado local)
-    const term = searchTerm || localSearchTerm;
-    if (term) {
-      const termLower = term.toLowerCase();
-      result = result.filter(
-        order => order.id.toLowerCase().includes(termLower) || 
-                order.customer.toLowerCase().includes(termLower)
-      );
+  const filteredOrders = orders.filter(order => {
+    // Filtrar por termo de busca
+    if (searchTerm) {
+      const termLower = searchTerm.toLowerCase();
+      if (!order.id.toLowerCase().includes(termLower) && 
+          !order.customer.toLowerCase().includes(termLower)) {
+        return false;
+      }
     }
     
     // Filtrar por status
-    if (statusFilter) {
-      // Se recebemos um statusFilter via props, esse tem prioridade
-      result = result.filter(order => order.status === statusFilter);
+    if (statusFilter && order.status !== statusFilter) {
+      return false;
     }
     
-    return result;
-  }, [localSearchTerm, statusFilter, orders, searchTerm]);
+    return true;
+  });
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <CardTitle className="text-xl">Pedidos</CardTitle>
-          <div className="flex items-center relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar pedido ou cliente..." 
-              className="pl-9 md:w-80"
-              value={searchTerm || localSearchTerm}
-              onChange={(e) => setLocalSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
+        <CardTitle className="text-xl">Pedidos</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
