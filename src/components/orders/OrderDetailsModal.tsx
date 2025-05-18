@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -100,7 +101,7 @@ export function OrderDetailsModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl overflow-hidden max-h-[90vh]" hideCloseButton>
+        <DialogContent className="max-w-5xl overflow-hidden max-h-[90vh]" hideCloseButton>
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -141,7 +142,7 @@ export function OrderDetailsModal({
             
             {/* Coluna da direita - Stepper e ações */}
             <div className="flex flex-col justify-between">
-              <div className="bg-muted/30 p-6 rounded-lg">
+              <div className="bg-muted/30 p-6 rounded-lg w-full">
                 <h4 className="font-medium mb-4 text-center">Status do Pedido</h4>
                 
                 <OrderStatusStepper

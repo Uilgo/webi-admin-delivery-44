@@ -1,3 +1,4 @@
+
 import { OrderStatus } from "./OrderCard";
 import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export function OrderStatusStepper({
   return (
     <div className="flex flex-col items-center">
       {/* Stepper Horizontal */}
-      <div className="relative mb-6 w-full max-w-sm">
+      <div className="relative mb-6 w-full max-w-md mx-auto">
         {/* Linha conectora */}
         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0" />
         
@@ -61,7 +62,7 @@ export function OrderStatusStepper({
             `;
             
             return (
-              <div key={status.id} className="relative flex flex-col items-center">
+              <div key={status.id} className="relative flex flex-col items-center px-4">
                 <div className={stepCircleClasses}>
                   {isCompleted ? (
                     <CheckIcon className="h-3 w-3" />
