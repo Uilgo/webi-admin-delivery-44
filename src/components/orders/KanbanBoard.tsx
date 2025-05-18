@@ -107,7 +107,7 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         order={selectedOrder}
-        statusList={selectedOrder ? getAvailableStatuses(selectedOrder) : []}
+        statusList={statusList}
         onStatusChange={handleStatusChange}
       />
 

@@ -9,6 +9,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Order, OrderStatus } from "./OrderCard";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { X, AlertTriangle } from "lucide-react";
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -25,9 +37,19 @@ export function OrderDetailsModal({
   statusList,
   onStatusChange,
 }: OrderDetailsModalProps) {
+  const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
+
   if (!order) return null;
 
   const currentStatus = statusList.find((s) => s.id === order.status);
+  
+  // Filtrar os status para o fluxo normal (sem cancelado)
+  const normalStatusList = statusList.filter(status => status.id !== "cancelado");
+  
+  const handleCancelOrder = () => {
+    onStatusChange(order.id, "cancelado");
+    setIsConfirmCancelOpen(false);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -108,10 +130,10 @@ export function OrderDetailsModal({
         <div className="mt-2 pb-4">
           <h4 className="font-medium mb-2">Alterar Status</h4>
           <div className="flex flex-wrap gap-2">
-            {statusList.map((status) => {
+            {normalStatusList.map((status, index) => {
               // Get the index of the current status and this status in the list
-              const currentStatusIndex = statusList.findIndex(s => s.id === order.status);
-              const thisStatusIndex = statusList.findIndex(s => s.id === status.id);
+              const currentStatusIndex = normalStatusList.findIndex(s => s.id === order.status);
+              const thisStatusIndex = index;
               
               // Status is unavailable if it's before the current status
               const isUnavailable = thisStatusIndex < currentStatusIndex;
@@ -138,6 +160,18 @@ export function OrderDetailsModal({
               );
             })}
           </div>
+
+          <div className="mt-4">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => setIsConfirmCancelOpen(true)}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancelar Pedido
+            </Button>
+          </div>
         </div>
 
         <DialogFooter>
@@ -146,6 +180,29 @@ export function OrderDetailsModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={isConfirmCancelOpen} onOpenChange={setIsConfirmCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Cancelar Pedido
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja cancelar o pedido {order.id}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCancelOrder}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, cancelar pedido
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
