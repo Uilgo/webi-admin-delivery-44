@@ -51,15 +51,6 @@ const Menu = () => {
           </p>
         </Card>
       </TabsContent>
-      
-      <TabsContent value="fidelizacao">
-        <Card className="p-6">
-          <p className="text-lg font-medium">Programa de Fidelização</p>
-          <p className="text-muted-foreground">
-            Configure seu programa de fidelização para recompensar clientes frequentes.
-          </p>
-        </Card>
-      </TabsContent>
     </MenuTabs>
   );
 };

@@ -3,10 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
-const data = [
-  { name: "Cadastrados", value: 65 },
-  { name: "Não Cadastrados", value: 35 },
-];
+interface ConversionRateProps {
+  period?: string;
+}
+
+const periodData = {
+  semanal: [
+    { name: "Cadastrados", value: 65 },
+    { name: "Não Cadastrados", value: 35 },
+  ],
+  mensal: [
+    { name: "Cadastrados", value: 72 },
+    { name: "Não Cadastrados", value: 28 },
+  ],
+  anual: [
+    { name: "Cadastrados", value: 78 },
+    { name: "Não Cadastrados", value: 22 },
+  ]
+};
 
 const COLORS = ["#8b5cf6", "#e5e7eb"];
 
@@ -38,11 +52,35 @@ const renderCustomizedLabel = ({
   );
 };
 
-export function ConversionRate() {
+export function ConversionRate({ period = "semanal" }: ConversionRateProps) {
+  const data = periodData[period as keyof typeof periodData];
+  
+  // Calcular título baseado no período
+  const periodTitle = period === 'semanal' 
+    ? 'Semanal' 
+    : period === 'mensal' 
+      ? 'Mensal' 
+      : 'Anual';
+  
+  // Calcular meta e conversão baseadas no período
+  const targetText = period === 'semanal' 
+    ? 'Meta: 70% de clientes cadastrados'
+    : period === 'mensal'
+      ? 'Meta: 75% de clientes cadastrados'
+      : 'Meta: 80% de clientes cadastrados';
+  
+  const conversionText = period === 'semanal'
+    ? 'Conversão na semana: +5%'
+    : period === 'mensal'
+      ? 'Conversão no mês: +7%'
+      : 'Conversão no ano: +12%';
+  
+  const conversionColor = 'text-green-600';
+
   return (
     <Card className={cn("col-span-full lg:col-span-1")}>
       <CardHeader>
-        <CardTitle className="text-base">Taxa de Conversão de Cadastro</CardTitle>
+        <CardTitle className="text-base">Taxa de Conversão de Cadastro - {periodTitle}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
         <div className="h-[200px] w-full">
@@ -68,8 +106,8 @@ export function ConversionRate() {
           </ResponsiveContainer>
         </div>
         <div className="mt-2 text-sm text-muted-foreground text-center">
-          <p>Meta: 70% de clientes cadastrados</p>
-          <p className="text-green-600 font-medium mt-1">Conversão na semana: +5%</p>
+          <p>{targetText}</p>
+          <p className={`${conversionColor} font-medium mt-1`}>{conversionText}</p>
         </div>
       </CardContent>
     </Card>
