@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Trash2, Grid, Copy, Move } from "lucide-react";
+import { Edit, Plus, Trash2, Copy, Move } from "lucide-react";
 import { Category } from "./CategoryList";
 import { Product } from "./ProductList";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { CategoryFormModal } from "./CategoryFormModal";
 import { ProductFormModal } from "./ProductFormModal";
 import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 // Dados de exemplo de categorias (igual ao CategoryList.tsx)
 const categories: Category[] = [
@@ -171,6 +172,17 @@ export function UnifiedMenuView() {
     setDeleteModalOpen(true);
   };
 
+  const handleDuplicateCategory = (category: Category) => {
+    const newCategory: Category = {
+      ...category,
+      id: String(Date.now()),
+      name: `${category.name} (Cópia)`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    setCategoryList([...categoryList, newCategory]);
+  };
+
   const handleAddProduct = (categoryName: string) => {
     setEditingProduct({
       id: "",
@@ -194,6 +206,17 @@ export function UnifiedMenuView() {
   const handleDeleteProduct = (product: Product) => {
     setItemToDelete({type: 'product', item: product});
     setDeleteModalOpen(true);
+  };
+
+  const handleDuplicateProduct = (product: Product) => {
+    const newProduct: Product = {
+      ...product,
+      id: String(Date.now()),
+      name: `${product.name} (Cópia)`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    setProductList([...productList, newProduct]);
   };
 
   const confirmDelete = () => {
@@ -258,177 +281,299 @@ export function UnifiedMenuView() {
     return categoryList.filter(cat => cat.active);
   }, [categoryList]);
 
-  return (
-    <div className="space-y-8">
-      <div className="flex justify-between mb-6">
-        <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
-        <Button onClick={handleAddCategory}>
-          <Plus className="h-4 w-4 mr-1" />
-          Nova Categoria
-        </Button>
-      </div>
+  // Handle drag end for drag and drop operations
+  const handleDragEnd = (result: any) => {
+    const { source, destination, type } = result;
+    
+    // If the item was dropped outside of a droppable area
+    if (!destination) return;
+    
+    // If the item was dropped in the same position
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) return;
+    
+    // Handle category reordering
+    if (type === 'category') {
+      const reorderedCategories = Array.from(activeCategories);
+      const [removedCategory] = reorderedCategories.splice(source.index, 1);
+      reorderedCategories.splice(destination.index, 0, removedCategory);
+      
+      // Update category orders
+      const updatedCategories = reorderedCategories.map((cat, idx) => ({
+        ...cat,
+        order: idx + 1
+      }));
+      
+      setCategoryList([
+        ...updatedCategories,
+        ...categoryList.filter(cat => !cat.active)
+      ]);
+    }
+    
+    // Handle product reordering within a category
+    if (type === 'product') {
+      const categoryId = source.droppableId;
+      const categoryProducts = Array.from(productsByCategory[categoryId] || []);
+      
+      // If the product was moved to a different category
+      if (source.droppableId !== destination.droppableId) {
+        const sourceProducts = Array.from(productsByCategory[source.droppableId] || []);
+        const destProducts = Array.from(productsByCategory[destination.droppableId] || []);
+        
+        const [movedProduct] = sourceProducts.splice(source.index, 1);
+        destProducts.splice(destination.index, 0, {
+          ...movedProduct,
+          category: destination.droppableId
+        });
+        
+        // Update product list with the reordered products
+        const updatedProductList = productList
+          .filter(p => p.category !== source.droppableId && p.category !== destination.droppableId)
+          .concat(sourceProducts)
+          .concat(destProducts.map(p => ({
+            ...p, 
+            category: destination.droppableId
+          })));
+        
+        setProductList(updatedProductList);
+      } else {
+        // If the product was moved within the same category
+        const [movedProduct] = categoryProducts.splice(source.index, 1);
+        categoryProducts.splice(destination.index, 0, movedProduct);
+        
+        // Update product list with the reordered products
+        const updatedProductList = productList
+          .filter(p => p.category !== categoryId)
+          .concat(categoryProducts);
+        
+        setProductList(updatedProductList);
+      }
+    }
+  };
 
-      {activeCategories.map((category) => (
-        <div key={category.id} className="mb-10 animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            {/* Cabeçalho da categoria */}
-            <div className="p-4 flex items-center justify-between border-b">
-              <div className="flex items-center gap-2">
-                <Grid className="h-5 w-5 text-gray-500" />
-                <h3 className="text-lg font-medium">{category.name}</h3>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(category)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-            
-            {/* Produtos da categoria */}
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
-              </div>
-              
-              {productsByCategory[category.name]?.length > 0 ? (
-                <div className="space-y-4">
-                  {productsByCategory[category.name].map((product) => (
-                    <div 
-                      key={product.id} 
-                      className="bg-white dark:bg-gray-800 border rounded-lg shadow-sm overflow-hidden animate-fade-in"
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="space-y-8">
+        <div className="flex justify-between mb-6">
+          <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
+          <Button onClick={handleAddCategory}>
+            <Plus className="h-4 w-4 mr-1" />
+            Nova Categoria
+          </Button>
+        </div>
+
+        <Droppable droppableId="categories" type="category">
+          {(provided) => (
+            <div 
+              {...provided.droppableProps}
+              ref={provided.innerRef} 
+              className="space-y-8"
+            >
+              {activeCategories.map((category, index) => (
+                <Draggable 
+                  key={category.id} 
+                  draggableId={category.id} 
+                  index={index}
+                >
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className="mb-10 animate-fade-in"
                     >
-                      <div className="flex items-center p-0">
-                        {/* Ícone de mover/arrastar */}
-                        <div className="p-3 border-r">
-                          <Move className="h-5 w-5 text-gray-400" />
-                        </div>
-                        
-                        {/* Imagem do produto */}
-                        <div className="flex-shrink-0 w-20 h-20 relative">
-                          <Avatar className="h-full w-full rounded-none">
-                            <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
-                            <AvatarFallback className="rounded-none h-full text-lg">
-                              {product.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        
-                        {/* Informações do produto */}
-                        <div className="flex-grow p-3">
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-medium text-lg">{product.name}</h3>
-                              {product.featured && (
-                                <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
-                                  {product.featured ? "2" : "1"}
-                                </Badge>
-                              )}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                        {/* Cabeçalho da categoria com handle de drag */}
+                        <div className="p-4 flex items-center justify-between border-b">
+                          <div className="flex items-center gap-2">
+                            <div {...provided.dragHandleProps}>
+                              <Move className="h-5 w-5 text-gray-500 cursor-move" />
                             </div>
-                            
-                            <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
-                            
-                            <div className="mt-2">
-                              <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
-                                {product.price}
-                              </p>
-                            </div>
+                            <h3 className="text-lg font-medium">{category.name}</h3>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(category)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicateCategory(category)}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </div>
                         </div>
                         
-                        {/* Botões de ação */}
-                        <div className="flex flex-col items-center gap-2 p-2 border-l">
-                          {product.featured && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Move className="h-4 w-4" />
+                        {/* Produtos da categoria */}
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
+                          </div>
+                          
+                          <Droppable droppableId={category.name} type="product">
+                            {(provided) => (
+                              <div 
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="space-y-4"
+                              >
+                                {productsByCategory[category.name]?.length > 0 ? (
+                                  <div className="space-y-4">
+                                    {productsByCategory[category.name].map((product, idx) => (
+                                      <Draggable 
+                                        key={product.id} 
+                                        draggableId={product.id} 
+                                        index={idx}
+                                      >
+                                        {(provided) => (
+                                          <div 
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            className="bg-white dark:bg-gray-800 border rounded-lg shadow-sm overflow-hidden animate-fade-in"
+                                          >
+                                            <div className="flex items-center p-0">
+                                              {/* Ícone de mover/arrastar */}
+                                              <div 
+                                                className="p-3 border-r cursor-move"
+                                                {...provided.dragHandleProps}
+                                              >
+                                                <Move className="h-5 w-5 text-gray-400" />
+                                              </div>
+                                              
+                                              {/* Imagem do produto */}
+                                              <div className="flex-shrink-0 w-20 h-20 relative">
+                                                <Avatar className="h-full w-full rounded-none">
+                                                  <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
+                                                  <AvatarFallback className="rounded-none h-full text-lg">
+                                                    {product.name.substring(0, 2).toUpperCase()}
+                                                  </AvatarFallback>
+                                                </Avatar>
+                                              </div>
+                                              
+                                              {/* Informações do produto */}
+                                              <div className="flex-grow p-3">
+                                                <div className="flex flex-col">
+                                                  <div className="flex items-center gap-2">
+                                                    <h3 className="font-medium text-lg">{product.name}</h3>
+                                                    {product.featured && (
+                                                      <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
+                                                        {product.featured ? "2" : "1"}
+                                                      </Badge>
+                                                    )}
+                                                  </div>
+                                                  
+                                                  <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                                                  
+                                                  <div className="mt-2">
+                                                    <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
+                                                      {product.price}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              
+                                              {/* Botões de ação (horizontal) */}
+                                              <div className="flex items-center gap-2 p-3 border-l">
+                                                <Button 
+                                                  variant="ghost" 
+                                                  size="icon" 
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleEditProduct(product)}
+                                                >
+                                                  <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button 
+                                                  variant="ghost" 
+                                                  size="icon" 
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleDuplicateProduct(product)}
+                                                >
+                                                  <Copy className="h-4 w-4" />
+                                                </Button>
+                                                <Button 
+                                                  variant="ghost" 
+                                                  size="icon" 
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleDeleteProduct(product)}
+                                                >
+                                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-6 border rounded-lg bg-muted/20">
+                                    <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
+                                  </div>
+                                )}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                          
+                          {/* Botão para adicionar novo produto */}
+                          <div className="mt-4">
+                            <Button 
+                              variant="outline" 
+                              className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
+                              onClick={() => handleAddProduct(category.name)}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Adicionar novo produto
                             </Button>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => handleEditProduct(product)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => handleDeleteProduct(product)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 border rounded-lg bg-muted/20">
-                  <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
-                </div>
-              )}
-              
-              {/* Botão para adicionar novo produto */}
-              <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
-                  onClick={() => handleAddProduct(category.name)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar novo produto
-                </Button>
-              </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </div>
-          </div>
+          )}
+        </Droppable>
+        
+        {/* Botão para adicionar nova categoria */}
+        <div className="mt-6">
+          <Button 
+            variant="outline" 
+            className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
+            onClick={handleAddCategory}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar nova categoria
+          </Button>
         </div>
-      ))}
-      
-      {/* Botão para adicionar nova categoria */}
-      <div className="mt-6">
-        <Button 
-          variant="outline" 
-          className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
-          onClick={handleAddCategory}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar nova categoria
-        </Button>
+
+        <CategoryFormModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          category={editingCategory}
+          onSave={handleSaveCategory}
+          onDelete={editingCategory ? () => handleDeleteCategory(editingCategory) : undefined}
+        />
+
+        <ProductFormModal
+          isOpen={isProductModalOpen}
+          onClose={() => setIsProductModalOpen(false)}
+          product={editingProduct}
+          onSave={handleSaveProduct}
+          onDelete={editingProduct && editingProduct.id ? () => handleDeleteProduct(editingProduct) : undefined}
+        />
+
+        <DeleteConfirmationModal 
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          itemName={itemToDelete?.item?.name || ""}
+          itemType={itemToDelete?.type === 'category' ? 'categoria' : 'produto'}
+        />
       </div>
-
-      <CategoryFormModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        category={editingCategory}
-        onSave={handleSaveCategory}
-        onDelete={editingCategory ? () => handleDeleteCategory(editingCategory) : undefined}
-      />
-
-      <ProductFormModal
-        isOpen={isProductModalOpen}
-        onClose={() => setIsProductModalOpen(false)}
-        product={editingProduct}
-        onSave={handleSaveProduct}
-        onDelete={editingProduct && editingProduct.id ? () => handleDeleteProduct(editingProduct) : undefined}
-      />
-
-      <DeleteConfirmationModal 
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        itemName={itemToDelete?.item?.name || ""}
-        itemType={itemToDelete?.type === 'category' ? 'categoria' : 'produto'}
-      />
-    </div>
+    </DragDropContext>
   );
 }
