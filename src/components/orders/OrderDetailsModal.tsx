@@ -13,10 +13,10 @@ import { X, RotateCcw } from "lucide-react";
 import { CustomerInfo } from "./CustomerInfo";
 import { PaymentInfo } from "./PaymentInfo";
 import { OrderItemsTable } from "./OrderItemsTable";
-import { OrderStatusSelector } from "./OrderStatusSelector";
 import { useState } from "react";
 import { StatusChangeConfirmation } from "./StatusChangeConfirmation";
 import { InvalidStatusChangeModal } from "./InvalidStatusChangeModal";
+import { OrderStatusStepper } from "./OrderStatusStepper";
 import { toast } from "@/hooks/use-toast";
 
 interface OrderDetailsModalProps {
@@ -43,26 +43,21 @@ export function OrderDetailsModal({
 
   const currentStatus = statusList.find((s) => s.id === order.status);
   
-  // Função para lidar com a alteração de status via select
-  const handleStatusChange = (selectedStatus: string) => {
-    if (selectedStatus !== order.status) {
-      // Verificar se a progressão de status é válida
-      const currentStatusIndex = getStatusIndex(order.status);
-      const selectedStatusIndex = getStatusIndex(selectedStatus);
+  // Função para lidar com a solicitação de avançar para o próximo status
+  const handleRequestNextStatus = () => {
+    // Obter o status normal (excluindo cancelado)
+    const normalStatusFlow = statusList.filter(s => s.id !== "cancelado");
+    
+    // Encontrar o índice do status atual
+    const currentStatusIndex = normalStatusFlow.findIndex(s => s.id === order.status);
+    
+    // Verificar se há um próximo status disponível
+    if (currentStatusIndex < normalStatusFlow.length - 1) {
+      // Obter o próximo status na sequência
+      const nextStatus = normalStatusFlow[currentStatusIndex + 1].id;
       
-      // Não permitir pular etapas (exceto para cancelar)
-      if (selectedStatus !== "cancelado" && selectedStatusIndex - currentStatusIndex > 1) {
-        // Obter o próximo status válido na sequência
-        const normalStatusFlow = statusList.filter(s => s.id !== "cancelado");
-        const nextValidStatusObj = normalStatusFlow[currentStatusIndex + 1];
-        setNextValidStatus(nextValidStatusObj);
-        
-        // Abrir o modal de erro em vez de mostrar um toast
-        setInvalidStatusOpen(true);
-        return;
-      }
-      
-      setNewStatus(selectedStatus);
+      // Definir o novo status e abrir o modal de confirmação
+      setNewStatus(nextStatus);
       setConfirmationOpen(true);
     }
   };
@@ -142,11 +137,11 @@ export function OrderDetailsModal({
             />
           </div>
 
-          <OrderStatusSelector
-            currentStatus={order.status}
+          <OrderStatusStepper
             statusList={statusList}
-            onStatusChange={handleStatusChange}
-            disabled={order.status === "cancelado"}
+            currentStatus={order.status}
+            onRequestNextStatus={handleRequestNextStatus}
+            disableProgress={order.status === "cancelado"}
           />
 
           <DialogFooter className="flex items-center justify-between sm:justify-end gap-2">
