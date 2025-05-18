@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,9 +26,9 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trash2 } from "lucide-react";
 
+// Updated schema without category (it will be provided by the parent component)
 const formSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
-  category: z.string().min(1, { message: "Categoria é obrigatória" }),
   description: z.string().optional(),
   price: z.string().min(1, { message: "Preço é obrigatório" }),
   active: z.boolean().default(true),
@@ -72,7 +70,6 @@ export function ProductFormModal({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: product?.name || "",
-      category: product?.category || "",
       description: product?.description || "",
       price: product?.price || "",
       active: product?.active ?? true,
@@ -86,6 +83,8 @@ export function ProductFormModal({
     const updatedProduct = {
       id: product?.id || String(Date.now()),
       ...values,
+      // Keep the existing category (when editing) or use the category provided when creating
+      category: product?.category || "",
       createdAt: product?.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -119,9 +118,9 @@ export function ProductFormModal({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="flex items-center justify-center mb-4">
               <div className="flex flex-col items-center">
-                <Avatar className="w-20 h-20">
+                <Avatar className="w-20 h-20 rounded-lg">
                   <AvatarImage src={imagePreview || ""} alt="Preview" />
-                  <AvatarFallback className="bg-muted text-lg">
+                  <AvatarFallback className="bg-muted text-lg rounded-lg">
                     {form.watch("name")?.substring(0, 2).toUpperCase() || "IMG"}
                   </AvatarFallback>
                 </Avatar>
@@ -161,31 +160,6 @@ export function ProductFormModal({
                     <FormControl>
                       <Input placeholder="R$ 0,00" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma categoria" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

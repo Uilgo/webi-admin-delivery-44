@@ -154,11 +154,11 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
     <Card className="hover:shadow-md transition-shadow mb-3 animate-fade-in">
       <CardContent className="p-4">
         <div className="flex items-center">
-          {/* Imagem do produto */}
+          {/* Imagem do produto com bordas arredondadas em 8px */}
           <div className="flex-shrink-0 w-20 h-20 relative">
-            <Avatar className="h-full w-full rounded-none">
+            <Avatar className="h-full w-full rounded-lg overflow-hidden">
               <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
-              <AvatarFallback className="rounded-none h-full text-lg">
+              <AvatarFallback className="rounded-lg h-full text-lg">
                 {product.name.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -264,6 +264,7 @@ export function UnifiedMenuView() {
       active: true,
       featured: false,
       available: true,
+      description: "",
       createdAt: new Date(),
       updatedAt: new Date()
     } as Product);
