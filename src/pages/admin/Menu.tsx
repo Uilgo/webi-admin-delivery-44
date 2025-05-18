@@ -1,7 +1,6 @@
 
 import { MenuTabs } from "@/components/cardapio/MenuTabs";
-import { CategoryList } from "@/components/cardapio/CategoryList";
-import { ProductList } from "@/components/cardapio/ProductList";
+import { UnifiedMenuView } from "@/components/cardapio/UnifiedMenuView";
 import { AdditionalsList } from "@/components/cardapio/AdditionalsList";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -10,11 +9,11 @@ const Menu = () => {
   return (
     <MenuTabs>
       <TabsContent value="categorias">
-        <CategoryList />
+        <UnifiedMenuView />
       </TabsContent>
       
       <TabsContent value="produtos">
-        <ProductList />
+        <UnifiedMenuView />
       </TabsContent>
       
       <TabsContent value="adicionais">
