@@ -1,8 +1,7 @@
 
 import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, ChevronRight, Grid, Plus } from "lucide-react";
+import { Edit, Plus, Trash2, Grid, Copy, Move } from "lucide-react";
 import { Category } from "./CategoryList";
 import { Product } from "./ProductList";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,7 +54,7 @@ const categories: Category[] = [
   },
   {
     id: "5",
-    name: "Combos",
+    name: "Pizzas Doces",
     description: "Combinações especiais com desconto",
     active: true,
     order: 5,
@@ -101,6 +100,7 @@ const products: Product[] = [
     active: true,
     featured: true,
     available: false,
+    description: "Mussarela, provolone, parmesão e gorgonzola",
     imageUrl: "/placeholder.svg",
     createdAt: new Date(2025, 0, 22),
     updatedAt: new Date(2025, 1, 15),
@@ -113,6 +113,7 @@ const products: Product[] = [
     active: true,
     featured: false,
     available: true,
+    description: "Mussarela, presunto, cebola, ovo cozido e ervilha",
     imageUrl: "/placeholder.svg",
     createdAt: new Date(2025, 1, 5),
     updatedAt: new Date(2025, 1, 5),
@@ -125,9 +126,23 @@ const products: Product[] = [
     active: true,
     featured: false,
     available: true,
+    description: "Refrigerante Coca-Cola 2 litros",
     imageUrl: "/placeholder.svg",
     createdAt: new Date(2025, 1, 10),
     updatedAt: new Date(2025, 3, 20),
+  },
+  {
+    id: "6",
+    name: "Pizza de Chocolate",
+    category: "Pizzas Doces",
+    price: "R$ 39,90",
+    active: true,
+    featured: true,
+    available: true,
+    description: "Chocolate ao leite e chocolate branco",
+    imageUrl: "/placeholder.svg",
+    createdAt: new Date(2025, 1, 15),
+    updatedAt: new Date(2025, 3, 25),
   },
 ];
 
@@ -254,93 +269,142 @@ export function UnifiedMenuView() {
       </div>
 
       {activeCategories.map((category) => (
-        <div key={category.id} className="space-y-4">
-          <div className="flex items-center justify-between bg-accent/30 p-3 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Grid className="h-5 w-5" />
-              <h3 className="text-lg font-medium">{category.name}</h3>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
-              <Edit className="h-4 w-4 mr-1" />
-              Editar
-            </Button>
-          </div>
-
-          <div className="pl-2 space-y-4">
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="text-md font-medium text-muted-foreground pl-2">Produtos</h4>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleAddProduct(category.name)}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Novo Produto
-              </Button>
+        <div key={category.id} className="mb-10 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            {/* Cabeçalho da categoria */}
+            <div className="p-4 flex items-center justify-between border-b">
+              <div className="flex items-center gap-2">
+                <Grid className="h-5 w-5 text-gray-500" />
+                <h3 className="text-lg font-medium">{category.name}</h3>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(category)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
             </div>
             
-            {productsByCategory[category.name]?.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                {productsByCategory[category.name].map((product) => (
-                  <div 
-                    key={product.id} 
-                    className="flex bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden animate-fade-in"
-                  >
-                    <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 relative">
-                      <div className="absolute inset-0">
-                        <Avatar className="h-full w-full rounded-none">
-                          <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
-                          <AvatarFallback className="rounded-none h-full text-lg">
-                            {product.name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute bottom-1 right-1 bg-white/80 dark:bg-gray-800/80 rounded-full h-7 w-7"
-                        onClick={() => handleEditProduct(product)}
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex-grow p-4">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-lg">{product.name}</h3>
+            {/* Produtos da categoria */}
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
+              </div>
+              
+              {productsByCategory[category.name]?.length > 0 ? (
+                <div className="space-y-4">
+                  {productsByCategory[category.name].map((product) => (
+                    <div 
+                      key={product.id} 
+                      className="bg-white dark:bg-gray-800 border rounded-lg shadow-sm overflow-hidden animate-fade-in"
+                    >
+                      <div className="flex items-center p-0">
+                        {/* Ícone de mover/arrastar */}
+                        <div className="p-3 border-r">
+                          <Move className="h-5 w-5 text-gray-400" />
+                        </div>
+                        
+                        {/* Imagem do produto */}
+                        <div className="flex-shrink-0 w-20 h-20 relative">
+                          <Avatar className="h-full w-full rounded-none">
+                            <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
+                            <AvatarFallback className="rounded-none h-full text-lg">
+                              {product.name.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        
+                        {/* Informações do produto */}
+                        <div className="flex-grow p-3">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium text-lg">{product.name}</h3>
+                              {product.featured && (
+                                <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
+                                  {product.featured ? "2" : "1"}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                            
+                            <div className="mt-2">
+                              <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
+                                {product.price}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Botões de ação */}
+                        <div className="flex flex-col items-center gap-2 p-2 border-l">
                           {product.featured && (
-                            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-300">
-                              Destaque
-                            </Badge>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Move className="h-4 w-4" />
+                            </Button>
                           )}
-                          {!product.available && (
-                            <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-300">
-                              Indisponível
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
-                        
-                        <div className="mt-2">
-                          <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
-                            {product.price}
-                          </p>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleEditProduct(product)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleDeleteProduct(product)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border rounded-lg bg-muted/20">
+                  <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
+                </div>
+              )}
+              
+              {/* Botão para adicionar novo produto */}
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
+                  onClick={() => handleAddProduct(category.name)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar novo produto
+                </Button>
               </div>
-            ) : (
-              <div className="text-center py-6 border rounded-lg bg-muted/20">
-                <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       ))}
+      
+      {/* Botão para adicionar nova categoria */}
+      <div className="mt-6">
+        <Button 
+          variant="outline" 
+          className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
+          onClick={handleAddCategory}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar nova categoria
+        </Button>
+      </div>
 
       <CategoryFormModal
         isOpen={isCategoryModalOpen}

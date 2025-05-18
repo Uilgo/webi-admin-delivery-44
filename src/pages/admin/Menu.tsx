@@ -9,15 +9,11 @@ const Menu = () => {
   return (
     <MenuTabs>
       <TabsContent value="categorias">
-        <Card className="p-6">
-          <UnifiedMenuView />
-        </Card>
+        <UnifiedMenuView />
       </TabsContent>
       
       <TabsContent value="produtos">
-        <Card className="p-6">
-          <UnifiedMenuView />
-        </Card>
+        <UnifiedMenuView />
       </TabsContent>
       
       <TabsContent value="adicionais">
