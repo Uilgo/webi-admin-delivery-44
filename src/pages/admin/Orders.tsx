@@ -120,6 +120,7 @@ const mockOrders = [
 ];
 
 // Função para determinar quais status podem ser selecionados a partir de um status atual
+// Implementada para garantir que não permita retornar a um status anterior
 const getAvailableStatuses = (currentStatus: string): OrderStatus[] => {
   // Lógica para definir a progressão de status permitida
   const statusIndex = orderStatusList.findIndex(s => s.id === currentStatus);
@@ -173,7 +174,7 @@ const Orders = () => {
     }
     
     return result;
-  }, [searchTerm, activeTab, mockOrders]);
+  }, [searchTerm, activeTab]);
 
   const handleViewChange = (newView: "card" | "list") => {
     setView(newView);
@@ -249,19 +250,26 @@ const Orders = () => {
           {view === "list" ? (
             <OrderList 
               orders={filteredOrders} 
-              onViewDetails={handleViewDetails} 
+              onViewDetails={handleViewDetails}
+              searchTerm={searchTerm}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredOrders.map((order) => (
-                <OrderCard 
-                  key={order.id} 
-                  order={order} 
-                  statusList={orderStatusList} 
-                  onStatusChange={handleStatusChange} 
-                  onViewDetails={() => handleViewDetails(order.id)}
-                />
-              ))}
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    statusList={orderStatusList} 
+                    onStatusChange={handleStatusChange} 
+                    onViewDetails={() => handleViewDetails(order.id)}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center p-6 text-muted-foreground">
+                  Nenhum pedido encontrado
+                </div>
+              )}
             </div>
           )}
         </TabsContent>
@@ -272,7 +280,8 @@ const Orders = () => {
               <OrderList 
                 orders={filteredOrders} 
                 statusFilter={status.id} 
-                onViewDetails={handleViewDetails} 
+                onViewDetails={handleViewDetails}
+                searchTerm={searchTerm}
               />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -287,6 +296,11 @@ const Orders = () => {
                       onViewDetails={() => handleViewDetails(order.id)}
                     />
                   ))}
+                {filteredOrders.filter(order => order.status === status.id).length === 0 && (
+                  <div className="col-span-full text-center p-6 text-muted-foreground">
+                    Nenhum pedido com status {status.label}
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
@@ -297,7 +311,7 @@ const Orders = () => {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         order={selectedOrder}
-        statusList={getAvailableStatuses(selectedOrder?.status || "")}
+        statusList={selectedOrder ? getAvailableStatuses(selectedOrder.status) : []}
         onStatusChange={handleStatusChange}
       />
 

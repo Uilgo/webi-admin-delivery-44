@@ -36,6 +36,7 @@ interface OrderListProps {
   statusFilter?: string;
   orders: Order[];
   onViewDetails: (orderId: string) => void;
+  searchTerm?: string;
 }
 
 const getStatusBadge = (status: string) => {
@@ -64,20 +65,21 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-export function OrderList({ statusFilter, orders, onViewDetails }: OrderListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+export function OrderList({ statusFilter, orders, onViewDetails, searchTerm = "" }: OrderListProps) {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [selectedStatus, setSelectedStatus] = useState(statusFilter || "todos");
 
   // Filtragem de ordens baseada nos filtros
   const filteredOrders = useMemo(() => {
     let result = [...orders];
     
-    // Filtrar por termo de busca
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+    // Filtrar por termo de busca (pode vir do prop ou do estado local)
+    const term = searchTerm || localSearchTerm;
+    if (term) {
+      const termLower = term.toLowerCase();
       result = result.filter(
-        order => order.id.toLowerCase().includes(term) || 
-                order.customer.toLowerCase().includes(term)
+        order => order.id.toLowerCase().includes(termLower) || 
+                order.customer.toLowerCase().includes(termLower)
       );
     }
     
@@ -91,7 +93,7 @@ export function OrderList({ statusFilter, orders, onViewDetails }: OrderListProp
     }
     
     return result;
-  }, [searchTerm, selectedStatus, statusFilter, orders]);
+  }, [localSearchTerm, selectedStatus, statusFilter, orders, searchTerm]);
 
   return (
     <Card>
@@ -104,13 +106,14 @@ export function OrderList({ statusFilter, orders, onViewDetails }: OrderListProp
               <Input 
                 placeholder="Buscar pedido ou cliente..." 
                 className="pl-9 md:w-80"
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm || localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
               {!statusFilter && (
                 <Select 
-                  defaultValue={selectedStatus}
+                  value={selectedStatus}
                   onValueChange={setSelectedStatus}
                 >
                   <SelectTrigger className="w-full md:w-40">
@@ -149,30 +152,38 @@ export function OrderList({ statusFilter, orders, onViewDetails }: OrderListProp
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    {order.customer}
-                    {order.isRegistered && (
-                      <span className="h-2 w-2 rounded-full bg-green-500" title="Cliente cadastrado"></span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{order.date}</TableCell>
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{order.payment}</TableCell>
-                  <TableCell>{order.total}</TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => onViewDetails(order.id)}
-                    >
-                      Detalhes
-                    </Button>
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {order.customer}
+                      {order.isRegistered && (
+                        <span className="h-2 w-2 rounded-full bg-green-500" title="Cliente cadastrado"></span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{order.date}</TableCell>
+                    <TableCell>{getStatusBadge(order.status)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{order.payment}</TableCell>
+                    <TableCell>{order.total}</TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onViewDetails(order.id)}
+                      >
+                        Detalhes
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    Nenhum pedido encontrado
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
