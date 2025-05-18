@@ -27,11 +27,9 @@ export function OrderStatusStepper({
   const isCancelled = currentStatus === "cancelado";
 
   return (
-    <div className="mt-4 mb-6">
-      <h4 className="font-medium mb-4">Status do Pedido</h4>
-      
+    <div className="flex flex-col items-center">
       {/* Stepper Horizontal */}
-      <div className="relative mb-8">
+      <div className="relative mb-6 w-full max-w-sm">
         {/* Linha conectora */}
         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0" />
         
@@ -44,7 +42,7 @@ export function OrderStatusStepper({
             
             // Classes para estilização condicional
             const stepCircleClasses = `
-              z-10 flex items-center justify-center w-8 h-8 rounded-full 
+              z-10 flex items-center justify-center w-7 h-7 rounded-full 
               ${isActive 
                 ? 'bg-blue-500 text-white border-2 border-blue-500' 
                 : isCompleted 
@@ -54,7 +52,7 @@ export function OrderStatusStepper({
             `;
             
             const labelClasses = `
-              absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-medium whitespace-nowrap
+              absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-medium whitespace-nowrap
               ${isActive 
                 ? 'text-blue-700'
                 : isCompleted
@@ -67,9 +65,9 @@ export function OrderStatusStepper({
               <div key={status.id} className="relative flex flex-col items-center">
                 <div className={stepCircleClasses}>
                   {isCompleted ? (
-                    <CheckIcon className="h-4 w-4" />
+                    <CheckIcon className="h-3 w-3" />
                   ) : (
-                    <span>{index + 1}</span>
+                    <span className="text-xs">{index + 1}</span>
                   )}
                 </div>
                 <span className={labelClasses}>{status.label}</span>
@@ -83,7 +81,7 @@ export function OrderStatusStepper({
       {!isCancelled && !isCompleted && (
         <Button 
           onClick={onRequestNextStatus} 
-          className="w-full mt-2"
+          className="w-full max-w-xs mt-2"
           variant="default"
           disabled={disableProgress}
         >

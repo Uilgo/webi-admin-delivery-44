@@ -101,7 +101,7 @@ export function OrderDetailsModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md md:max-w-2xl overflow-y-auto max-h-[90vh]" hideCloseButton>
+        <DialogContent className="max-w-4xl overflow-hidden max-h-[90vh]" hideCloseButton>
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -117,60 +117,71 @@ export function OrderDetailsModal({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-            <CustomerInfo 
-              customer={order.customer}
-              isRegistered={order.isRegistered}
-              address={order.address}
-            />
-            <PaymentInfo 
-              payment={order.payment}
-              total={order.total}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            {/* Coluna da esquerda - Informações do pedido */}
+            <div className="space-y-4">
+              <CustomerInfo 
+                customer={order.customer}
+                isRegistered={order.isRegistered}
+                address={order.address}
+              />
+              
+              <PaymentInfo 
+                payment={order.payment}
+                total={order.total}
+              />
+              
+              <div>
+                <h4 className="font-medium mb-2">Itens do Pedido</h4>
+                <OrderItemsTable 
+                  items={order.items}
+                  total={order.total}
+                />
+              </div>
+            </div>
+            
+            {/* Coluna da direita - Stepper e ações */}
+            <div className="flex flex-col justify-between">
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <h4 className="font-medium mb-4 text-center">Status do Pedido</h4>
+                
+                <OrderStatusStepper
+                  statusList={statusList}
+                  currentStatus={order.status}
+                  onRequestNextStatus={handleRequestNextStatus}
+                  disableProgress={order.status === "cancelado"}
+                />
+              </div>
+              
+              <div className="mt-auto pt-4 flex flex-col gap-2">
+                {isOrderCancelled ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRestoreOrder}
+                    className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800 self-end"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Restaurar Pedido
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={handleCancelOrder}
+                    disabled={isCancelDisabled}
+                    className={`${isCancelDisabled ? "opacity-50 cursor-not-allowed" : ""} self-end`}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Cancelar Pedido
+                  </Button>
+                )}
+                <Button variant="outline" onClick={onClose} className="self-end">
+                  Fechar
+                </Button>
+              </div>
+            </div>
           </div>
-
-          <div className="pb-4">
-            <h4 className="font-medium mb-2">Itens do Pedido</h4>
-            <OrderItemsTable 
-              items={order.items}
-              total={order.total}
-            />
-          </div>
-
-          <OrderStatusStepper
-            statusList={statusList}
-            currentStatus={order.status}
-            onRequestNextStatus={handleRequestNextStatus}
-            disableProgress={order.status === "cancelado"}
-          />
-
-          <DialogFooter className="flex items-center justify-between sm:justify-end gap-2">
-            {isOrderCancelled ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRestoreOrder}
-                className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800"
-              >
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Restaurar Pedido
-              </Button>
-            ) : (
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={handleCancelOrder}
-                disabled={isCancelDisabled}
-                className={`${isCancelDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Cancelar Pedido
-              </Button>
-            )}
-            <Button variant="outline" onClick={onClose}>
-              Fechar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
