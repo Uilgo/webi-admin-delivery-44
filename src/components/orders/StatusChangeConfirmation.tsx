@@ -42,10 +42,10 @@ export function StatusChangeConfirmation({
         </DialogHeader>
 
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" size="lg-fixed" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={onConfirm}>
+          <Button size="lg-fixed" onClick={onConfirm}>
             Confirmar
           </Button>
         </DialogFooter>

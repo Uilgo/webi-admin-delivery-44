@@ -157,7 +157,7 @@ export function OrderDetailsModal({
                 {isOrderCancelled ? (
                   <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="lg-fixed" 
                     onClick={handleRestoreOrder}
                     className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800"
                   >
@@ -167,7 +167,7 @@ export function OrderDetailsModal({
                 ) : (
                   <Button 
                     variant="destructive" 
-                    size="sm" 
+                    size="lg-fixed" 
                     onClick={handleCancelOrder}
                     disabled={isCancelDisabled}
                     className={`${isCancelDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -176,7 +176,7 @@ export function OrderDetailsModal({
                     Cancelar Pedido
                   </Button>
                 )}
-                <Button variant="outline" onClick={onClose}>
+                <Button variant="outline" size="lg-fixed" onClick={onClose}>
                   Fechar
                 </Button>
               </div>

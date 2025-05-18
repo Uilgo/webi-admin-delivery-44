@@ -1,4 +1,3 @@
-
 import { OrderStatus } from "./OrderCard";
 import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,6 +82,7 @@ export function OrderStatusStepper({
           onClick={onRequestNextStatus} 
           className="w-full max-w-xs mt-8"
           variant="default"
+          size="lg-fixed"
           disabled={disableProgress}
         >
           Avançar para {currentIndex < normalStatusFlow.length - 1 
