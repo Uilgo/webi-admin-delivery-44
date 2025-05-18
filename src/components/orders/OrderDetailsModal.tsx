@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Order, OrderStatus } from "./OrderCard";
-import { X } from "lucide-react";
+import { X, RotateCcw } from "lucide-react";
 import { CustomerInfo } from "./CustomerInfo";
 import { PaymentInfo } from "./PaymentInfo";
 import { OrderItemsTable } from "./OrderItemsTable";
@@ -65,6 +65,18 @@ export function OrderDetailsModal({
     setNewStatus("cancelado");
     setConfirmationOpen(true);
   };
+  
+  // Função para restaurar pedido cancelado
+  const handleRestoreOrder = () => {
+    setNewStatus("pendente");
+    setConfirmationOpen(true);
+  };
+
+  // Verifica se o botão cancelar deve ser desabilitado (pedido concluído)
+  const isCancelDisabled = order.status === "concluido";
+  
+  // Verifica se o pedido está cancelado para mostrar o botão de restaurar
+  const isOrderCancelled = order.status === "cancelado";
 
   return (
     <>
@@ -113,15 +125,28 @@ export function OrderDetailsModal({
           />
 
           <DialogFooter className="flex items-center justify-between sm:justify-end gap-2">
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleCancelOrder}
-              disabled={order.status === "cancelado"}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancelar Pedido
-            </Button>
+            {isOrderCancelled ? (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRestoreOrder}
+                className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:text-green-800"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Restaurar Pedido
+              </Button>
+            ) : (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleCancelOrder}
+                disabled={isCancelDisabled}
+                className={isCancelDisabled ? "bg-opacity-50 hover:bg-opacity-50" : ""}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancelar Pedido
+              </Button>
+            )}
             <Button variant="outline" onClick={onClose}>
               Fechar
             </Button>
