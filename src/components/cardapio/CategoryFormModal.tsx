@@ -37,6 +37,7 @@ interface CategoryFormModalProps {
   onClose: () => void;
   category: Category | null;
   onSave: (category: Category) => void;
+  onDelete?: () => void; // Added onDelete as optional prop
 }
 
 export function CategoryFormModal({
@@ -44,6 +45,7 @@ export function CategoryFormModal({
   onClose,
   category,
   onSave,
+  onDelete,
 }: CategoryFormModalProps) {
   const isEditing = !!category;
 
@@ -151,11 +153,23 @@ export function CategoryFormModal({
               )}
             />
 
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">Salvar</Button>
+            <DialogFooter className="flex justify-between items-center pt-4">
+              {isEditing && onDelete && (
+                <Button 
+                  variant="destructive" 
+                  type="button" 
+                  onClick={onDelete}
+                  className="mr-auto"
+                >
+                  Excluir
+                </Button>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" type="button" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Salvar</Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
