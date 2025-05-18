@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { OrderList } from "@/components/orders/OrderList";
 import { OrderViewSelector } from "@/components/orders/OrderViewSelector";
@@ -7,15 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderDetailsModal } from "@/components/orders/OrderDetailsModal";
 import { StatusChangeConfirmation } from "@/components/orders/StatusChangeConfirmation";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Search } from "lucide-react";
 
 // Lista de status para pedidos em ordem de progressão
 const orderStatusList: OrderStatus[] = [
@@ -311,7 +302,7 @@ const Orders = () => {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         order={selectedOrder}
-        statusList={selectedOrder ? getAvailableStatuses(selectedOrder.status) : []}
+        statusList={orderStatusList}
         onStatusChange={handleStatusChange}
       />
 

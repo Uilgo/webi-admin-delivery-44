@@ -62,10 +62,7 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
   const getAvailableStatuses = (order: Order | null) => {
     if (!order) return statusList;
     
-    // Find current status index
-    const statusIndex = statusList.findIndex(s => s.id === order.status);
-    
-    // Return all statuses, but we'll mark some as unavailable in the modal
+    // Return all statuses
     return statusList;
   };
 
