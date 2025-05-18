@@ -15,6 +15,8 @@ import { MenuFilters } from "./MenuFilters";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { AdditionalFormModal } from "./AdditionalFormModal";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
+import { Trash2, Edit } from "lucide-react";
 
 export interface Additional {
   id: string;
@@ -92,9 +94,12 @@ export function AdditionalsList() {
   const [filter, setFilter] = useState("todos");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAdditional, setEditingAdditional] = useState<Additional | null>(null);
+  const [additionalList, setAdditionalList] = useState<Additional[]>(additionals);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [additionalToDelete, setAdditionalToDelete] = useState<Additional | null>(null);
 
   const filteredAdditionals = useMemo(() => {
-    let result = [...additionals];
+    let result = [...additionalList];
     
     // Aplicar filtro de busca
     if (searchTerm) {
@@ -141,7 +146,7 @@ export function AdditionalsList() {
     });
     
     return result;
-  }, [searchTerm, sortBy, filter]);
+  }, [searchTerm, sortBy, filter, additionalList]);
 
   const handleAddAdditional = () => {
     setEditingAdditional(null);
@@ -153,10 +158,36 @@ export function AdditionalsList() {
     setIsModalOpen(true);
   };
 
+  const handleDeleteAdditional = (additional: Additional) => {
+    setAdditionalToDelete(additional);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteAdditional = () => {
+    if (additionalToDelete) {
+      setAdditionalList(additionalList.filter(item => item.id !== additionalToDelete.id));
+      setDeleteModalOpen(false);
+      setAdditionalToDelete(null);
+    }
+  };
+
   const handleSaveAdditional = (additional: Additional) => {
-    // Aqui seria implementada a lógica para salvar o adicional
-    console.log("Salvando adicional:", additional);
+    // Se estiver editando, atualize o item existente
+    if (editingAdditional) {
+      setAdditionalList(additionalList.map(item => 
+        item.id === additional.id ? additional : item
+      ));
+    } else {
+      // Se for novo, adicione à lista
+      setAdditionalList([...additionalList, additional]);
+    }
     setIsModalOpen(false);
+  };
+
+  const handleToggleActive = (additional: Additional) => {
+    setAdditionalList(additionalList.map(item => 
+      item.id === additional.id ? { ...item, active: !item.active } : item
+    ));
   };
 
   return (
@@ -199,12 +230,22 @@ export function AdditionalsList() {
                   <TableCell className="hidden md:table-cell">{item.group}</TableCell>
                   <TableCell>{item.price}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <Switch checked={item.active} />
+                    <Switch 
+                      checked={item.active}
+                      onCheckedChange={() => handleToggleActive(item)} 
+                    />
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">{format(item.createdAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="hidden lg:table-cell">{format(item.updatedAt, 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleEditAdditional(item)}>Editar</Button>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditAdditional(item)}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteAdditional(item)}>
+                      <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                      <span className="text-destructive">Excluir</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -218,6 +259,14 @@ export function AdditionalsList() {
         onClose={() => setIsModalOpen(false)}
         additional={editingAdditional}
         onSave={handleSaveAdditional}
+      />
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDeleteAdditional}
+        itemName={additionalToDelete?.name || ""}
+        itemType="adicional"
       />
     </Card>
   );

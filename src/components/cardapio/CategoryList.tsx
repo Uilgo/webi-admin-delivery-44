@@ -14,6 +14,8 @@ import { MenuFilters } from "./MenuFilters";
 import { useState, useMemo } from "react";
 import { CategoryFormModal } from "./CategoryFormModal";
 import { format } from "date-fns";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
+import { Trash2, Edit } from "lucide-react";
 
 export interface Category {
   id: string;
@@ -85,9 +87,12 @@ export function CategoryList() {
   const [filter, setFilter] = useState("todas");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryList, setCategoryList] = useState<Category[]>(categories);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   const filteredCategories = useMemo(() => {
-    let result = [...categories];
+    let result = [...categoryList];
     
     // Aplicar filtro de busca
     if (searchTerm) {
@@ -122,7 +127,7 @@ export function CategoryList() {
     });
     
     return result;
-  }, [searchTerm, sortBy, filter]);
+  }, [searchTerm, sortBy, filter, categoryList]);
 
   const handleAddCategory = () => {
     setEditingCategory(null);
@@ -134,10 +139,36 @@ export function CategoryList() {
     setIsModalOpen(true);
   };
 
+  const handleDeleteCategory = (category: Category) => {
+    setCategoryToDelete(category);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteCategory = () => {
+    if (categoryToDelete) {
+      setCategoryList(categoryList.filter(cat => cat.id !== categoryToDelete.id));
+      setDeleteModalOpen(false);
+      setCategoryToDelete(null);
+    }
+  };
+
   const handleSaveCategory = (category: Category) => {
-    // Aqui seria implementada a lógica para salvar a categoria
-    console.log("Salvando categoria:", category);
+    // Se estiver editando, atualize o item existente
+    if (editingCategory) {
+      setCategoryList(categoryList.map(cat => 
+        cat.id === category.id ? category : cat
+      ));
+    } else {
+      // Se for novo, adicione à lista
+      setCategoryList([...categoryList, category]);
+    }
     setIsModalOpen(false);
+  };
+
+  const handleToggleActive = (category: Category) => {
+    setCategoryList(categoryList.map(cat => 
+      cat.id === category.id ? { ...cat, active: !cat.active } : cat
+    ));
   };
 
   return (
@@ -175,12 +206,22 @@ export function CategoryList() {
                   <TableCell className="hidden md:table-cell">{category.description}</TableCell>
                   <TableCell className="hidden md:table-cell">{category.products}</TableCell>
                   <TableCell>
-                    <Switch checked={category.active} />
+                    <Switch 
+                      checked={category.active} 
+                      onCheckedChange={() => handleToggleActive(category)} 
+                    />
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{format(category.createdAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="hidden md:table-cell">{format(category.updatedAt, 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>Editar</Button>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteCategory(category)}>
+                      <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                      <span className="text-destructive">Excluir</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -194,6 +235,14 @@ export function CategoryList() {
         onClose={() => setIsModalOpen(false)}
         category={editingCategory}
         onSave={handleSaveCategory}
+      />
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDeleteCategory}
+        itemName={categoryToDelete?.name || ""}
+        itemType="categoria"
       />
     </Card>
   );

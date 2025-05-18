@@ -16,6 +16,8 @@ import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { ProductFormModal } from "./ProductFormModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
+import { Trash2, Edit } from "lucide-react";
 
 export interface Product {
   id: string;
@@ -102,9 +104,12 @@ export function ProductList() {
   const [filter, setFilter] = useState("todos");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productList, setProductList] = useState<Product[]>(products);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = [...productList];
     
     // Aplicar filtro de busca
     if (searchTerm) {
@@ -150,7 +155,7 @@ export function ProductList() {
     });
     
     return result;
-  }, [searchTerm, sortBy, filter]);
+  }, [searchTerm, sortBy, filter, productList]);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -162,10 +167,42 @@ export function ProductList() {
     setIsModalOpen(true);
   };
 
+  const handleDeleteProduct = (product: Product) => {
+    setProductToDelete(product);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteProduct = () => {
+    if (productToDelete) {
+      setProductList(productList.filter(prod => prod.id !== productToDelete.id));
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
   const handleSaveProduct = (product: Product) => {
-    // Aqui seria implementada a lógica para salvar o produto
-    console.log("Salvando produto:", product);
+    // Se estiver editando, atualize o item existente
+    if (editingProduct) {
+      setProductList(productList.map(prod => 
+        prod.id === product.id ? product : prod
+      ));
+    } else {
+      // Se for novo, adicione à lista
+      setProductList([...productList, product]);
+    }
     setIsModalOpen(false);
+  };
+
+  const handleToggleActive = (product: Product) => {
+    setProductList(productList.map(prod => 
+      prod.id === product.id ? { ...prod, active: !prod.active } : prod
+    ));
+  };
+
+  const handleToggleAvailable = (product: Product) => {
+    setProductList(productList.map(prod => 
+      prod.id === product.id ? { ...prod, available: !prod.available } : prod
+    ));
   };
 
   return (
@@ -216,16 +253,31 @@ export function ProductList() {
                   <TableCell>{product.price}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-2">
-                      <Switch checked={product.active} />
-                      <span className="text-xs text-muted-foreground">
-                        {!product.available && "(Indisponível)"}
-                      </span>
+                      <Switch 
+                        checked={product.active}
+                        onCheckedChange={() => handleToggleActive(product)}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs" 
+                        onClick={() => handleToggleAvailable(product)}
+                      >
+                        {product.available ? "Disponível" : "Indisponível"}
+                      </Button>
                     </div>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">{format(product.createdAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="hidden lg:table-cell">{format(product.updatedAt, 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>Editar</Button>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product)}>
+                      <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                      <span className="text-destructive">Excluir</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -239,6 +291,14 @@ export function ProductList() {
         onClose={() => setIsModalOpen(false)}
         product={editingProduct}
         onSave={handleSaveProduct}
+      />
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDeleteProduct}
+        itemName={productToDelete?.name || ""}
+        itemType="produto"
       />
     </Card>
   );
