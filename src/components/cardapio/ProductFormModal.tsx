@@ -26,6 +26,7 @@ import * as z from "zod";
 import { Product } from "./ProductList";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Trash2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
@@ -45,6 +46,7 @@ interface ProductFormModalProps {
   onClose: () => void;
   product: Product | null;
   onSave: (product: Product) => void;
+  onDelete?: () => void;
 }
 
 // Categorias de exemplo
@@ -61,6 +63,7 @@ export function ProductFormModal({
   onClose,
   product,
   onSave,
+  onDelete,
 }: ProductFormModalProps) {
   const isEditing = !!product;
   const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
@@ -284,11 +287,19 @@ export function ProductFormModal({
               />
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">Salvar</Button>
+            <DialogFooter className="flex justify-between sm:justify-between">
+              {isEditing && onDelete && (
+                <Button variant="destructive" type="button" onClick={onDelete} className="mr-auto">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir
+                </Button>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" type="button" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Salvar</Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>

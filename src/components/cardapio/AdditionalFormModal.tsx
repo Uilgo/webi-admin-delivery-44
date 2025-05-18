@@ -24,6 +24,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Additional } from "./AdditionalsList";
+import { Trash2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
@@ -41,6 +42,7 @@ interface AdditionalFormModalProps {
   onClose: () => void;
   additional: Additional | null;
   onSave: (additional: Additional) => void;
+  onDelete?: () => void;
 }
 
 // Grupos de adicionais de exemplo
@@ -57,6 +59,7 @@ export function AdditionalFormModal({
   onClose,
   additional,
   onSave,
+  onDelete,
 }: AdditionalFormModalProps) {
   const isEditing = !!additional;
 
@@ -209,11 +212,19 @@ export function AdditionalFormModal({
               />
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">Salvar</Button>
+            <DialogFooter className="flex justify-between sm:justify-between">
+              {isEditing && onDelete && (
+                <Button variant="destructive" type="button" onClick={onDelete} className="mr-auto">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir
+                </Button>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" type="button" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Salvar</Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
