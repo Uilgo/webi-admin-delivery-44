@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
 import { useMemo, useState } from "react";
 
+// Updated Order interface to match the one in OrderCard.tsx
 interface Order {
   id: string;
   customer: string;
@@ -28,7 +29,12 @@ interface Order {
   total: string;
   date: string;
   payment: string;
-  items: number;
+  address: string; // Added to match OrderCard.tsx
+  items: {
+    name: string;
+    quantity: number;
+    price: string;
+  }[]; // Updated to match the actual data structure
   isRegistered: boolean;
 }
 
