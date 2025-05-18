@@ -10,6 +10,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { MenuFilters } from "./MenuFilters";
+import { useState, useMemo } from "react";
 
 interface Category {
   id: string;
@@ -64,37 +66,86 @@ const categories: Category[] = [
 ];
 
 export function CategoryList() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("nome_asc");
+  const [filter, setFilter] = useState("todas");
+
+  const filteredCategories = useMemo(() => {
+    let result = [...categories];
+    
+    // Aplicar filtro de busca
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      result = result.filter(
+        cat => cat.name.toLowerCase().includes(searchLower) || 
+               cat.description.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Aplicar filtro de status
+    if (filter === "ativas") {
+      result = result.filter(cat => cat.active);
+    } else if (filter === "inativas") {
+      result = result.filter(cat => !cat.active);
+    }
+    
+    // Aplicar ordenação
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "nome_asc":
+          return a.name.localeCompare(b.name);
+        case "nome_desc":
+          return b.name.localeCompare(a.name);
+        case "data_criacao":
+          return a.id.localeCompare(b.id);
+        default:
+          return a.order - b.order;
+      }
+    });
+    
+    return result;
+  }, [searchTerm, sortBy, filter]);
+
   return (
     <Card>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Ordem</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead className="hidden md:table-cell">Descrição</TableHead>
-              <TableHead className="hidden md:table-cell">Produtos</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categories.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell className="font-medium">{category.order}</TableCell>
-                <TableCell>{category.name}</TableCell>
-                <TableCell className="hidden md:table-cell">{category.description}</TableCell>
-                <TableCell className="hidden md:table-cell">{category.products}</TableCell>
-                <TableCell>
-                  <Switch checked={category.active} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">Editar</Button>
-                </TableCell>
+      <div className="p-6">
+        <MenuFilters 
+          type="categorias"
+          onSearch={setSearchTerm}
+          onSort={setSortBy}
+          onFilter={setFilter}
+        />
+        
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Ordem</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead className="hidden md:table-cell">Descrição</TableHead>
+                <TableHead className="hidden md:table-cell">Produtos</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredCategories.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell className="font-medium">{category.order}</TableCell>
+                  <TableCell>{category.name}</TableCell>
+                  <TableCell className="hidden md:table-cell">{category.description}</TableCell>
+                  <TableCell className="hidden md:table-cell">{category.products}</TableCell>
+                  <TableCell>
+                    <Switch checked={category.active} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm">Editar</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </Card>
   );

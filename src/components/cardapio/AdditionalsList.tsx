@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -13,94 +14,91 @@ import { Badge } from "@/components/ui/badge";
 import { MenuFilters } from "./MenuFilters";
 import { useState, useMemo } from "react";
 
-interface Product {
+interface Additional {
   id: string;
   name: string;
-  category: string;
+  group: string;
   price: string;
   active: boolean;
-  featured: boolean;
-  available: boolean;
+  isRequired: boolean;
   description?: string;
 }
 
-const products: Product[] = [
+const additionals: Additional[] = [
   {
     id: "1",
-    name: "Pizza Margherita",
-    category: "Pizzas Tradicionais",
-    price: "R$ 45,90",
+    name: "Bacon",
+    group: "Ingredientes Extras",
+    price: "R$ 5,00",
     active: true,
-    featured: true,
-    available: true,
-    description: "Molho de tomate, mussarela, manjericão fresco e azeite"
+    isRequired: false,
+    description: "30g de bacon crocante"
   },
   {
     id: "2",
-    name: "Pizza Calabresa",
-    category: "Pizzas Tradicionais",
-    price: "R$ 42,90",
+    name: "Borda Recheada",
+    group: "Bordas",
+    price: "R$ 8,00",
     active: true,
-    featured: false,
-    available: true,
-    description: "Molho de tomate, mussarela e calabresa fatiada"
+    isRequired: false,
+    description: "Borda recheada com catupiry"
   },
   {
     id: "3",
-    name: "Pizza 4 Queijos",
-    category: "Pizzas Tradicionais",
-    price: "R$ 49,90",
+    name: "Molho de Alho",
+    group: "Molhos",
+    price: "R$ 2,00",
     active: true,
-    featured: true,
-    available: false,
+    isRequired: false,
+    description: "Molho de alho artesanal"
   },
   {
     id: "4",
-    name: "Pizza Portuguesa",
-    category: "Pizzas Tradicionais",
-    price: "R$ 45,90",
+    name: "Refrigerante Lata",
+    group: "Bebidas",
+    price: "R$ 6,00",
     active: true,
-    featured: false,
-    available: true,
+    isRequired: false,
+    description: "Várias opções disponíveis"
   },
   {
     id: "5",
-    name: "Coca-Cola 2L",
-    category: "Bebidas",
-    price: "R$ 12,90",
+    name: "Escolha o Tamanho",
+    group: "Tamanhos",
+    price: "Variável",
     active: true,
-    featured: false,
-    available: true,
+    isRequired: true,
+    description: "Pequena, Média ou Grande"
   },
 ];
 
-export function ProductList() {
+export function AdditionalsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("nome_asc");
   const [filter, setFilter] = useState("todos");
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
+  const filteredAdditionals = useMemo(() => {
+    let result = [...additionals];
     
     // Aplicar filtro de busca
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
-        product => 
-          product.name.toLowerCase().includes(searchLower) || 
-          (product.description || "").toLowerCase().includes(searchLower) ||
-          product.category.toLowerCase().includes(searchLower) ||
-          product.price.toLowerCase().includes(searchLower)
+        item => 
+          item.name.toLowerCase().includes(searchLower) || 
+          (item.description || "").toLowerCase().includes(searchLower)
       );
     }
     
     // Aplicar filtro de status
     if (filter === "ativos") {
-      result = result.filter(product => product.active);
+      result = result.filter(item => item.active);
     } else if (filter === "inativos") {
-      result = result.filter(product => !product.active);
-    } else if (filter === "destaque") {
-      result = result.filter(product => product.featured);
+      result = result.filter(item => !item.active);
+    } else if (filter === "obrigatorios") {
+      result = result.filter(item => item.isRequired);
+    } else if (filter === "opcionais") {
+      result = result.filter(item => !item.isRequired);
     }
     
     // Aplicar ordenação
@@ -110,8 +108,8 @@ export function ProductList() {
           return a.name.localeCompare(b.name);
         case "nome_desc":
           return b.name.localeCompare(a.name);
-        case "categoria":
-          return a.category.localeCompare(b.category);
+        case "grupo":
+          return a.group.localeCompare(b.group);
         case "preco_asc":
           return a.price.localeCompare(b.price);
         case "preco_desc":
@@ -128,7 +126,7 @@ export function ProductList() {
     <Card>
       <div className="p-6">
         <MenuFilters 
-          type="produtos"
+          type="adicionais"
           onSearch={setSearchTerm}
           onSort={setSortBy}
           onFilter={setFilter}
@@ -139,32 +137,27 @@ export function ProductList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead className="hidden md:table-cell">Categoria</TableHead>
+                <TableHead className="hidden md:table-cell">Grupo</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead className="hidden md:table-cell">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
+              {filteredAdditionals.map((item) => (
+                <TableRow key={item.id}>
                   <TableCell className="font-medium flex items-center gap-2">
-                    {product.name}
-                    {product.featured && (
-                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-300">
-                        Destaque
+                    {item.name}
+                    {item.isRequired && (
+                      <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-300">
+                        Obrigatório
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{product.category}</TableCell>
-                  <TableCell>{product.price}</TableCell>
+                  <TableCell className="hidden md:table-cell">{item.group}</TableCell>
+                  <TableCell>{item.price}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-2">
-                      <Switch checked={product.active} />
-                      <span className="text-xs text-muted-foreground">
-                        {!product.available && "(Indisponível)"}
-                      </span>
-                    </div>
+                    <Switch checked={item.active} />
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">Editar</Button>

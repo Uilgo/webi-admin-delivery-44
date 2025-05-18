@@ -2,6 +2,7 @@
 import { MenuTabs } from "@/components/cardapio/MenuTabs";
 import { CategoryList } from "@/components/cardapio/CategoryList";
 import { ProductList } from "@/components/cardapio/ProductList";
+import { AdditionalsList } from "@/components/cardapio/AdditionalsList";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 
@@ -17,12 +18,7 @@ const Menu = () => {
       </TabsContent>
       
       <TabsContent value="adicionais">
-        <Card className="p-6">
-          <p className="text-lg font-medium">Gerenciar Adicionais</p>
-          <p className="text-muted-foreground">
-            Aqui você poderá criar grupos de adicionais e seus itens.
-          </p>
-        </Card>
+        <AdditionalsList />
       </TabsContent>
       
       <TabsContent value="cupons">

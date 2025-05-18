@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface Order {
   id: string;
@@ -29,6 +30,10 @@ interface Order {
   payment: string;
   items: number;
   isRegistered: boolean;
+}
+
+interface OrderListProps {
+  statusFilter?: string;
 }
 
 const orders: Order[] = [
@@ -128,7 +133,32 @@ const getStatusBadge = (status: Order["status"]) => {
   );
 };
 
-export function OrderList() {
+export function OrderList({ statusFilter }: OrderListProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState(statusFilter || "todos");
+
+  // Filtragem de ordens baseada nos filtros
+  const filteredOrders = useMemo(() => {
+    let result = [...orders];
+    
+    // Filtrar por termo de busca
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        order => order.id.toLowerCase().includes(term) || 
+                order.customer.toLowerCase().includes(term)
+      );
+    }
+    
+    // Filtrar por status
+    const status = statusFilter || selectedStatus;
+    if (status !== "todos") {
+      result = result.filter(order => order.status === status);
+    }
+    
+    return result;
+  }, [searchTerm, selectedStatus, statusFilter]);
+
   return (
     <Card>
       <CardHeader>
@@ -140,22 +170,28 @@ export function OrderList() {
               <Input 
                 placeholder="Buscar pedido ou cliente..." 
                 className="pl-9 md:w-80"
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <Select defaultValue="todos">
-                <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="recebido">Recebido</SelectItem>
-                  <SelectItem value="emPreparo">Em Preparo</SelectItem>
-                  <SelectItem value="pronto">Pronto</SelectItem>
-                  <SelectItem value="finalizado">Finalizado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
+              {!statusFilter && (
+                <Select 
+                  defaultValue={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                >
+                  <SelectTrigger className="w-full md:w-40">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="recebido">Recebido</SelectItem>
+                    <SelectItem value="em preparo">Em Preparo</SelectItem>
+                    <SelectItem value="pronto">Pronto</SelectItem>
+                    <SelectItem value="finalizado">Finalizado</SelectItem>
+                    <SelectItem value="cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
               </Button>
@@ -178,7 +214,7 @@ export function OrderList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell className="flex items-center gap-2">

@@ -1,9 +1,9 @@
 
 import { useState } from "react";
 import { OrderList } from "@/components/orders/OrderList";
-import { KanbanBoard } from "@/components/orders/KanbanBoard";
 import { OrderViewSelector } from "@/components/orders/OrderViewSelector";
-import { OrderStatus } from "@/components/orders/OrderCard";
+import { OrderCard, OrderStatus } from "@/components/orders/OrderCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Lista de status para pedidos
 const orderStatusList: OrderStatus[] = [
@@ -121,11 +121,57 @@ const Orders = () => {
         <OrderViewSelector view={view} onViewChange={handleViewChange} />
       </div>
 
-      {view === "list" ? (
-        <OrderList />
-      ) : (
-        <KanbanBoard orders={mockOrders} statusList={orderStatusList} />
-      )}
+      <Tabs defaultValue="todos" className="w-full">
+        <TabsList className="grid grid-cols-7 mb-4">
+          <TabsTrigger value="todos">Todos</TabsTrigger>
+          <TabsTrigger value="pendente">Pendente</TabsTrigger>
+          <TabsTrigger value="aceito">Aceito</TabsTrigger>
+          <TabsTrigger value="em_preparo">Em Preparo</TabsTrigger>
+          <TabsTrigger value="saiu_entrega">Em Entrega</TabsTrigger>
+          <TabsTrigger value="concluido">Concluído</TabsTrigger>
+          <TabsTrigger value="cancelado">Cancelado</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="todos">
+          {view === "list" ? (
+            <OrderList />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {mockOrders.map((order) => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  statusList={orderStatusList} 
+                  onStatusChange={() => {}} 
+                  onViewDetails={() => {}}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {orderStatusList.map((status) => (
+          <TabsContent key={status.id} value={status.id}>
+            {view === "list" ? (
+              <OrderList statusFilter={status.id} />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mockOrders
+                  .filter((order) => order.status === status.id)
+                  .map((order) => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      statusList={orderStatusList} 
+                      onStatusChange={() => {}} 
+                      onViewDetails={() => {}}
+                    />
+                  ))}
+              </div>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 };
