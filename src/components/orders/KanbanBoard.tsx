@@ -27,6 +27,13 @@ export function KanbanBoard({ orders, statusList }: KanbanBoardProps) {
   const handleStatusChange = (orderId: string, newStatus: string) => {
     const order = orders.find((o) => o.id === orderId);
     if (order) {
+      // Se estiver cancelando o pedido, aplicar diretamente
+      if (newStatus === "cancelado") {
+        order.status = newStatus;
+        return;
+      }
+      
+      // Para outras alterações de status, mostrar confirmação
       setStatusChange({
         orderId,
         fromStatus: order.status,

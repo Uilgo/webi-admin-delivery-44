@@ -9,18 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Order, OrderStatus } from "./OrderCard";
-import { useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { X, AlertTriangle } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { X } from "lucide-react";
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -37,8 +33,6 @@ export function OrderDetailsModal({
   statusList,
   onStatusChange,
 }: OrderDetailsModalProps) {
-  const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
-
   if (!order) return null;
 
   const currentStatus = statusList.find((s) => s.id === order.status);
@@ -46,10 +40,19 @@ export function OrderDetailsModal({
   // Filtrar os status para o fluxo normal (sem cancelado)
   const normalStatusList = statusList.filter(status => status.id !== "cancelado");
   
+  // Função para lidar com a alteração de status via select
+  const handleStatusChange = (newStatus: string) => {
+    onStatusChange(order.id, newStatus);
+  };
+  
+  // Função para lidar com o cancelamento do pedido
   const handleCancelOrder = () => {
     onStatusChange(order.id, "cancelado");
-    setIsConfirmCancelOpen(false);
+    onClose();
   };
+
+  // Get the index of the current status in the normal status list
+  const currentStatusIndex = normalStatusList.findIndex(s => s.id === order.status);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -129,80 +132,50 @@ export function OrderDetailsModal({
 
         <div className="mt-2 pb-4">
           <h4 className="font-medium mb-2">Alterar Status</h4>
-          <div className="flex flex-wrap gap-2">
-            {normalStatusList.map((status, index) => {
-              // Get the index of the current status and this status in the list
-              const currentStatusIndex = normalStatusList.findIndex(s => s.id === order.status);
-              const thisStatusIndex = index;
-              
-              // Status is unavailable if it's before the current status
-              const isUnavailable = thisStatusIndex < currentStatusIndex;
-              
-              return (
-                <Button
-                  key={status.id}
-                  variant={order.status === status.id ? "default" : "outline"}
-                  size="sm"
-                  className={
-                    order.status === status.id 
-                      ? status.color 
-                      : isUnavailable 
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" 
-                        : undefined
-                  }
-                  onClick={() => !isUnavailable && onStatusChange(order.id, status.id)}
-                  disabled={order.status === status.id || isUnavailable}
-                  title={isUnavailable ? "Não é possível retornar a um status anterior" : undefined}
-                >
-                  {status.label}
-                  {isUnavailable && <span className="ml-1 text-xs">(bloqueado)</span>}
-                </Button>
-              );
-            })}
-          </div>
-
-          <div className="mt-4">
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              className="bg-red-500 hover:bg-red-600"
-              onClick={() => setIsConfirmCancelOpen(true)}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancelar Pedido
-            </Button>
-          </div>
+          <Select 
+            value={order.status} 
+            onValueChange={handleStatusChange}
+            disabled={order.status === "cancelado"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione um status" />
+            </SelectTrigger>
+            <SelectContent>
+              {normalStatusList.map((status, index) => {
+                // Status is unavailable if it's before the current status
+                const isUnavailable = index < currentStatusIndex;
+                
+                return (
+                  <SelectItem 
+                    key={status.id} 
+                    value={status.id}
+                    disabled={isUnavailable}
+                    className={order.status === status.id ? status.color : ""}
+                  >
+                    {status.label}
+                    {isUnavailable && " (bloqueado)"}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex items-center justify-between sm:justify-end gap-2">
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleCancelOrder}
+            disabled={order.status === "cancelado"}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Cancelar Pedido
+          </Button>
           <Button variant="outline" onClick={onClose}>
             Fechar
           </Button>
         </DialogFooter>
       </DialogContent>
-
-      <AlertDialog open={isConfirmCancelOpen} onOpenChange={setIsConfirmCancelOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Cancelar Pedido
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Você tem certeza que deseja cancelar o pedido {order.id}? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleCancelOrder}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Sim, cancelar pedido
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }
