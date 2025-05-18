@@ -10,6 +10,7 @@ import { ProductFormModal } from "./ProductFormModal";
 import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Dados de exemplo de categorias (igual ao CategoryList.tsx)
 const categories: Category[] = [
@@ -147,6 +148,77 @@ const products: Product[] = [
   },
 ];
 
+// Componente de Card de Produto
+function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
+  return (
+    <Card className="hover:shadow-md transition-shadow mb-3 animate-fade-in">
+      <CardContent className="p-4">
+        <div className="flex items-center">
+          {/* Imagem do produto */}
+          <div className="flex-shrink-0 w-20 h-20 relative">
+            <Avatar className="h-full w-full rounded-none">
+              <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
+              <AvatarFallback className="rounded-none h-full text-lg">
+                {product.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          
+          {/* Informações do produto */}
+          <div className="flex-grow p-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-lg">{product.name}</h3>
+                {product.featured && (
+                  <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
+                    Destaque
+                  </Badge>
+                )}
+              </div>
+              
+              <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+              
+              <div className="mt-2">
+                <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
+                  {product.price}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Botões de ação (vertical) */}
+          <div className="flex flex-col gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => onEdit(product)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => onDuplicate(product)}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => onDelete(product)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function UnifiedMenuView() {
   const [categoryList, setCategoryList] = useState<Category[]>(categories);
   const [productList, setProductList] = useState<Product[]>(products);
@@ -281,89 +353,66 @@ export function UnifiedMenuView() {
     return categoryList.filter(cat => cat.active);
   }, [categoryList]);
 
-  // Handle drag end for drag and drop operations
-  const handleDragEnd = (result: any) => {
-    const { source, destination, type } = result;
+  // Handle drag end for category reordering
+  const handleCategoryDragEnd = (result: any) => {
+    const { source, destination } = result;
     
     // If the item was dropped outside of a droppable area
     if (!destination) return;
     
     // If the item was dropped in the same position
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) return;
+    if (source.index === destination.index) return;
     
-    // Handle category reordering
-    if (type === 'category') {
-      const reorderedCategories = Array.from(activeCategories);
-      const [removedCategory] = reorderedCategories.splice(source.index, 1);
-      reorderedCategories.splice(destination.index, 0, removedCategory);
-      
-      // Update category orders
-      const updatedCategories = reorderedCategories.map((cat, idx) => ({
-        ...cat,
-        order: idx + 1
-      }));
-      
-      setCategoryList([
-        ...updatedCategories,
-        ...categoryList.filter(cat => !cat.active)
-      ]);
-    }
+    const reorderedCategories = Array.from(activeCategories);
+    const [removedCategory] = reorderedCategories.splice(source.index, 1);
+    reorderedCategories.splice(destination.index, 0, removedCategory);
     
-    // Handle product reordering within a category
-    if (type === 'product') {
-      const categoryId = source.droppableId;
-      const categoryProducts = Array.from(productsByCategory[categoryId] || []);
-      
-      // If the product was moved to a different category
-      if (source.droppableId !== destination.droppableId) {
-        const sourceProducts = Array.from(productsByCategory[source.droppableId] || []);
-        const destProducts = Array.from(productsByCategory[destination.droppableId] || []);
-        
-        const [movedProduct] = sourceProducts.splice(source.index, 1);
-        destProducts.splice(destination.index, 0, {
-          ...movedProduct,
-          category: destination.droppableId
-        });
-        
-        // Update product list with the reordered products
-        const updatedProductList = productList
-          .filter(p => p.category !== source.droppableId && p.category !== destination.droppableId)
-          .concat(sourceProducts)
-          .concat(destProducts.map(p => ({
-            ...p, 
-            category: destination.droppableId
-          })));
-        
-        setProductList(updatedProductList);
-      } else {
-        // If the product was moved within the same category
-        const [movedProduct] = categoryProducts.splice(source.index, 1);
-        categoryProducts.splice(destination.index, 0, movedProduct);
-        
-        // Update product list with the reordered products
-        const updatedProductList = productList
-          .filter(p => p.category !== categoryId)
-          .concat(categoryProducts);
-        
-        setProductList(updatedProductList);
-      }
-    }
+    // Update category orders
+    const updatedCategories = reorderedCategories.map((cat, idx) => ({
+      ...cat,
+      order: idx + 1
+    }));
+    
+    setCategoryList([
+      ...updatedCategories,
+      ...categoryList.filter(cat => !cat.active)
+    ]);
+  };
+
+  // Handle drag end for product reordering within a category
+  const handleProductDragEnd = (result: any, categoryName: string) => {
+    const { source, destination } = result;
+    
+    // If the item was dropped outside of a droppable area
+    if (!destination) return;
+    
+    // If the item was dropped in the same position
+    if (source.index === destination.index) return;
+    
+    const categoryProducts = Array.from(productsByCategory[categoryName] || []);
+    const [movedProduct] = categoryProducts.splice(source.index, 1);
+    categoryProducts.splice(destination.index, 0, movedProduct);
+    
+    // Update product list with the reordered products
+    const updatedProductList = productList
+      .filter(p => p.category !== categoryName)
+      .concat(categoryProducts);
+    
+    setProductList(updatedProductList);
   };
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="space-y-8">
-        <div className="flex justify-between mb-6">
-          <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
-          <Button onClick={handleAddCategory}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nova Categoria
-          </Button>
-        </div>
+    <div className="space-y-8">
+      <div className="flex justify-between mb-6">
+        <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
+        <Button onClick={handleAddCategory}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nova Categoria
+        </Button>
+      </div>
 
+      {/* Drag and Drop Context para Categorias */}
+      <DragDropContext onDragEnd={handleCategoryDragEnd}>
         <Droppable droppableId="categories" type="category">
           {(provided) => (
             <div 
@@ -383,7 +432,7 @@ export function UnifiedMenuView() {
                       {...provided.draggableProps}
                       className="mb-10 animate-fade-in"
                     >
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                      <Card className="bg-white dark:bg-gray-800 shadow-md overflow-hidden">
                         {/* Cabeçalho da categoria com handle de drag */}
                         <div className="p-4 flex items-center justify-between border-b">
                           <div className="flex items-center gap-2">
@@ -405,116 +454,66 @@ export function UnifiedMenuView() {
                           </div>
                         </div>
                         
-                        {/* Produtos da categoria */}
+                        {/* Produtos da categoria - Com contexto DND separado */}
                         <div className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
                           </div>
                           
-                          <Droppable droppableId={category.name} type="product">
-                            {(provided) => (
-                              <div 
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                className="space-y-4"
-                              >
-                                {productsByCategory[category.name]?.length > 0 ? (
-                                  <div className="space-y-4">
-                                    {productsByCategory[category.name].map((product, idx) => (
-                                      <Draggable 
-                                        key={product.id} 
-                                        draggableId={product.id} 
-                                        index={idx}
-                                      >
-                                        {(provided) => (
-                                          <div 
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            className="bg-white dark:bg-gray-800 border rounded-lg shadow-sm overflow-hidden animate-fade-in"
-                                          >
-                                            <div className="flex items-center p-0">
-                                              {/* Ícone de mover/arrastar */}
-                                              <div 
-                                                className="p-3 border-r cursor-move"
-                                                {...provided.dragHandleProps}
-                                              >
-                                                <Move className="h-5 w-5 text-gray-400" />
-                                              </div>
-                                              
-                                              {/* Imagem do produto */}
-                                              <div className="flex-shrink-0 w-20 h-20 relative">
-                                                <Avatar className="h-full w-full rounded-none">
-                                                  <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
-                                                  <AvatarFallback className="rounded-none h-full text-lg">
-                                                    {product.name.substring(0, 2).toUpperCase()}
-                                                  </AvatarFallback>
-                                                </Avatar>
-                                              </div>
-                                              
-                                              {/* Informações do produto */}
-                                              <div className="flex-grow p-3">
-                                                <div className="flex flex-col">
-                                                  <div className="flex items-center gap-2">
-                                                    <h3 className="font-medium text-lg">{product.name}</h3>
-                                                    {product.featured && (
-                                                      <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
-                                                        {product.featured ? "2" : "1"}
-                                                      </Badge>
-                                                    )}
-                                                  </div>
-                                                  
-                                                  <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
-                                                  
-                                                  <div className="mt-2">
-                                                    <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
-                                                      {product.price}
-                                                    </p>
-                                                  </div>
+                          {/* Contexto separado para drag and drop de produtos */}
+                          <DragDropContext onDragEnd={(result) => handleProductDragEnd(result, category.name)}>
+                            <Droppable droppableId={`products-${category.id}`} type={`products-${category.id}`}>
+                              {(provided) => (
+                                <div 
+                                  {...provided.droppableProps}
+                                  ref={provided.innerRef}
+                                  className="space-y-4"
+                                >
+                                  {productsByCategory[category.name]?.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      {productsByCategory[category.name].map((product, idx) => (
+                                        <Draggable 
+                                          key={product.id} 
+                                          draggableId={product.id} 
+                                          index={idx}
+                                        >
+                                          {(provided) => (
+                                            <div 
+                                              ref={provided.innerRef}
+                                              {...provided.draggableProps}
+                                              className="animate-fade-in"
+                                            >
+                                              <div className="flex items-center">
+                                                <div 
+                                                  className="p-2 cursor-move mr-2 text-gray-400 hover:text-gray-600"
+                                                  {...provided.dragHandleProps}
+                                                >
+                                                  <Move className="h-4 w-4" />
+                                                </div>
+                                                <div className="flex-grow">
+                                                  <ProductCard
+                                                    product={product}
+                                                    onEdit={handleEditProduct}
+                                                    onDuplicate={handleDuplicateProduct}
+                                                    onDelete={handleDeleteProduct}
+                                                  />
                                                 </div>
                                               </div>
-                                              
-                                              {/* Botões de ação (horizontal) */}
-                                              <div className="flex items-center gap-2 p-3 border-l">
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="icon" 
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleEditProduct(product)}
-                                                >
-                                                  <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="icon" 
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleDuplicateProduct(product)}
-                                                >
-                                                  <Copy className="h-4 w-4" />
-                                                </Button>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="icon" 
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleDeleteProduct(product)}
-                                                >
-                                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                              </div>
                                             </div>
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="text-center py-6 border rounded-lg bg-muted/20">
-                                    <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
-                                  </div>
-                                )}
-                                {provided.placeholder}
-                              </div>
-                            )}
-                          </Droppable>
+                                          )}
+                                        </Draggable>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-center py-6 border rounded-lg bg-muted/20">
+                                      <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
+                                    </div>
+                                  )}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                          </DragDropContext>
                           
                           {/* Botão para adicionar novo produto */}
                           <div className="mt-4">
@@ -528,7 +527,7 @@ export function UnifiedMenuView() {
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      </Card>
                     </div>
                   )}
                 </Draggable>
@@ -537,43 +536,43 @@ export function UnifiedMenuView() {
             </div>
           )}
         </Droppable>
-        
-        {/* Botão para adicionar nova categoria */}
-        <div className="mt-6">
-          <Button 
-            variant="outline" 
-            className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
-            onClick={handleAddCategory}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar nova categoria
-          </Button>
-        </div>
-
-        <CategoryFormModal
-          isOpen={isCategoryModalOpen}
-          onClose={() => setIsCategoryModalOpen(false)}
-          category={editingCategory}
-          onSave={handleSaveCategory}
-          onDelete={editingCategory ? () => handleDeleteCategory(editingCategory) : undefined}
-        />
-
-        <ProductFormModal
-          isOpen={isProductModalOpen}
-          onClose={() => setIsProductModalOpen(false)}
-          product={editingProduct}
-          onSave={handleSaveProduct}
-          onDelete={editingProduct && editingProduct.id ? () => handleDeleteProduct(editingProduct) : undefined}
-        />
-
-        <DeleteConfirmationModal 
-          isOpen={deleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
-          onConfirm={confirmDelete}
-          itemName={itemToDelete?.item?.name || ""}
-          itemType={itemToDelete?.type === 'category' ? 'categoria' : 'produto'}
-        />
+      </DragDropContext>
+      
+      {/* Botão para adicionar nova categoria */}
+      <div className="mt-6">
+        <Button 
+          variant="outline" 
+          className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
+          onClick={handleAddCategory}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar nova categoria
+        </Button>
       </div>
-    </DragDropContext>
+
+      <CategoryFormModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        category={editingCategory}
+        onSave={handleSaveCategory}
+        onDelete={editingCategory ? () => handleDeleteCategory(editingCategory) : undefined}
+      />
+
+      <ProductFormModal
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+        product={editingProduct}
+        onSave={handleSaveProduct}
+        onDelete={editingProduct && editingProduct.id ? () => handleDeleteProduct(editingProduct) : undefined}
+      />
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        itemName={itemToDelete?.item?.name || ""}
+        itemType={itemToDelete?.type === 'category' ? 'categoria' : 'produto'}
+      />
+    </div>
   );
 }

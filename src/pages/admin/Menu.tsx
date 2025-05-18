@@ -8,23 +8,21 @@ import { Card } from "@/components/ui/card";
 const Menu = () => {
   return (
     <MenuTabs>
-      <TabsContent value="categorias">
+      <TabsContent value="categorias" className="mt-4">
+        <UnifiedMenuView />
+      </TabsContent>
+      
+      <TabsContent value="produtos" className="mt-4">
         <Card className="p-6">
           <UnifiedMenuView />
         </Card>
       </TabsContent>
       
-      <TabsContent value="produtos">
-        <Card className="p-6">
-          <UnifiedMenuView />
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="adicionais">
+      <TabsContent value="adicionais" className="mt-4">
         <AdditionalsList />
       </TabsContent>
       
-      <TabsContent value="cupons">
+      <TabsContent value="cupons" className="mt-4">
         <Card className="p-6">
           <p className="text-lg font-medium">Gerenciar Cupons</p>
           <p className="text-muted-foreground">
@@ -33,7 +31,7 @@ const Menu = () => {
         </Card>
       </TabsContent>
       
-      <TabsContent value="promocoes">
+      <TabsContent value="promocoes" className="mt-4">
         <Card className="p-6">
           <p className="text-lg font-medium">Gerenciar Promoções</p>
           <p className="text-muted-foreground">
@@ -42,7 +40,7 @@ const Menu = () => {
         </Card>
       </TabsContent>
       
-      <TabsContent value="banners">
+      <TabsContent value="banners" className="mt-4">
         <Card className="p-6">
           <p className="text-lg font-medium">Gerenciar Banners</p>
           <p className="text-muted-foreground">
