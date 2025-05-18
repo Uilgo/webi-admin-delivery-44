@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Trash2, Copy, Move } from "lucide-react";
+import { Edit, Plus, Trash2, Copy, Move, List, LayoutGrid, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CategoryFormModal } from "./CategoryFormModal";
@@ -12,6 +12,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Product } from "./ProductList";
 import { Category } from "./CategoryList";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 // Dados de exemplo de categorias (igual ao CategoryList.tsx)
 const categories: Category[] = [
@@ -236,6 +249,15 @@ export function UnifiedMenuView() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{type: 'category' | 'product', item: Category | Product} | null>(null);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategoryCollapse = (categoryId: string) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
+  };
 
   const handleAddCategory = () => {
     setEditingCategory(null);
@@ -410,18 +432,91 @@ export function UnifiedMenuView() {
     setProductList(updatedProductList);
   };
 
+  // Render a product in list view
+  const renderProductListItem = (product: Product) => (
+    <TableRow key={product.id}>
+      <TableCell className="w-12">
+        <Avatar className="h-9 w-9 rounded-md">
+          <AvatarImage src={product.imageUrl} alt={product.name} />
+          <AvatarFallback className="rounded-md">{product.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+      </TableCell>
+      <TableCell className="font-medium">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="truncate block max-w-[150px]">{product.name}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{product.name}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </TableCell>
+      <TableCell>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="truncate block max-w-[250px]">{product.description}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-xs">{product.description}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </TableCell>
+      <TableCell>{product.price}</TableCell>
+      <TableCell>
+        {product.featured && (
+          <Badge className="bg-amber-100 text-amber-800">Destaque</Badge>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDuplicateProduct(product)}>
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(product)}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between mb-6">
         <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
-        <Button 
-          variant="outline" 
-          className="border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400"
-          onClick={handleAddCategory}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Categoria
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            size="icon"
+            className={viewMode === 'card' ? 'bg-muted' : ''}
+            onClick={() => setViewMode('card')}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="outline"
+            size="icon"
+            className={viewMode === 'list' ? 'bg-muted' : ''}
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            className="border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400"
+            onClick={handleAddCategory}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Categoria
+          </Button>
+        </div>
       </div>
 
       {/* Drag and Drop Context para Categorias */}
@@ -445,102 +540,145 @@ export function UnifiedMenuView() {
                       {...provided.draggableProps}
                       className="mb-10 animate-fade-in"
                     >
-                      <Card className="bg-white dark:bg-gray-800 shadow-md overflow-hidden">
-                        {/* Cabeçalho da categoria com handle de drag */}
-                        <div className="p-4 flex items-center justify-between border-b">
-                          <div className="flex items-center gap-2">
-                            <div {...provided.dragHandleProps}>
-                              <Move className="h-5 w-5 text-gray-500 cursor-move" />
+                      <Collapsible open={!collapsedCategories[category.id]}>
+                        <Card className="bg-white dark:bg-gray-800 shadow-md overflow-hidden">
+                          {/* Cabeçalho da categoria com handle de drag e toggle collapse */}
+                          <div className="p-4 flex items-center justify-between border-b">
+                            <div className="flex items-center gap-2">
+                              <div {...provided.dragHandleProps}>
+                                <Move className="h-5 w-5 text-gray-500 cursor-move" />
+                              </div>
+                              <h3 className="text-lg font-medium">{category.name}</h3>
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" onClick={() => toggleCategoryCollapse(category.id)}>
+                                  {collapsedCategories[category.id] ? 
+                                    <ChevronDown className="h-4 w-4" /> : 
+                                    <ChevronUp className="h-4 w-4" />
+                                  }
+                                </Button>
+                              </CollapsibleTrigger>
                             </div>
-                            <h3 className="text-lg font-medium">{category.name}</h3>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(category)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicateCategory(category)}>
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {/* Produtos da categoria - Com contexto DND separado */}
-                        <div className="p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(category)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicateCategory(category)}>
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteCategory(category)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </div>
                           
-                          {/* Contexto separado para drag and drop de produtos */}
-                          <DragDropContext onDragEnd={(result) => handleProductDragEnd(result, category.name)}>
-                            <Droppable droppableId={`products-${category.id}`} type={`products-${category.id}`}>
-                              {(provided) => (
-                                <div 
-                                  {...provided.droppableProps}
-                                  ref={provided.innerRef}
-                                  className="space-y-4"
-                                >
-                                  {productsByCategory[category.name]?.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      {productsByCategory[category.name].map((product, idx) => (
-                                        <Draggable 
-                                          key={product.id} 
-                                          draggableId={product.id} 
-                                          index={idx}
-                                        >
-                                          {(provided) => (
-                                            <div 
-                                              ref={provided.innerRef}
-                                              {...provided.draggableProps}
-                                              className="animate-fade-in"
-                                            >
-                                              <div className="flex items-center">
-                                                <div 
-                                                  className="p-2 cursor-move mr-2 text-gray-400 hover:text-gray-600"
-                                                  {...provided.dragHandleProps}
-                                                >
-                                                  <Move className="h-4 w-4" />
-                                                </div>
-                                                <div className="flex-grow">
-                                                  <ProductCard
-                                                    product={product}
-                                                    onEdit={handleEditProduct}
-                                                    onDuplicate={handleDuplicateProduct}
-                                                    onDelete={handleDeleteProduct}
-                                                  />
-                                                </div>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </Draggable>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div className="text-center py-6 border rounded-lg bg-muted/20">
-                                      <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
-                                    </div>
-                                  )}
-                                  {provided.placeholder}
+                          <CollapsibleContent>
+                            {/* Produtos da categoria - Com contexto DND separado */}
+                            <div className="p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
+                              </div>
+                              
+                              {viewMode === 'card' ? (
+                                /* Card view - Com drag and drop */
+                                <DragDropContext onDragEnd={(result) => handleProductDragEnd(result, category.name)}>
+                                  <Droppable droppableId={`products-${category.id}`} type={`products-${category.id}`}>
+                                    {(provided) => (
+                                      <div 
+                                        {...provided.droppableProps}
+                                        ref={provided.innerRef}
+                                        className="space-y-4"
+                                      >
+                                        {productsByCategory[category.name]?.length > 0 ? (
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {productsByCategory[category.name].map((product, idx) => (
+                                              <Draggable 
+                                                key={product.id} 
+                                                draggableId={product.id} 
+                                                index={idx}
+                                              >
+                                                {(provided) => (
+                                                  <div 
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    className="animate-fade-in"
+                                                  >
+                                                    <div className="flex items-center">
+                                                      <div 
+                                                        className="p-2 cursor-move mr-2 text-gray-400 hover:text-gray-600"
+                                                        {...provided.dragHandleProps}
+                                                      >
+                                                        <Move className="h-4 w-4" />
+                                                      </div>
+                                                      <div className="flex-grow">
+                                                        <ProductCard
+                                                          product={product}
+                                                          onEdit={handleEditProduct}
+                                                          onDuplicate={handleDuplicateProduct}
+                                                          onDelete={handleDeleteProduct}
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </Draggable>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <div className="text-center py-6 border rounded-lg bg-muted/20">
+                                            <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
+                                          </div>
+                                        )}
+                                        {provided.placeholder}
+                                      </div>
+                                    )}
+                                  </Droppable>
+                                </DragDropContext>
+                              ) : (
+                                /* List view */
+                                <div className="border rounded-lg overflow-hidden">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead className="w-12"></TableHead>
+                                        <TableHead>Nome</TableHead>
+                                        <TableHead>Descrição</TableHead>
+                                        <TableHead>Preço</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Ações</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {productsByCategory[category.name]?.length > 0 ? (
+                                        productsByCategory[category.name].map(product => 
+                                          renderProductListItem(product)
+                                        )
+                                      ) : (
+                                        <TableRow>
+                                          <TableCell colSpan={6} className="h-24 text-center">
+                                            Nenhum produto nesta categoria
+                                          </TableCell>
+                                        </TableRow>
+                                      )}
+                                    </TableBody>
+                                  </Table>
                                 </div>
                               )}
-                            </Droppable>
-                          </DragDropContext>
-                          
-                          {/* Botão para adicionar novo produto */}
-                          <div className="mt-4">
-                            <Button 
-                              variant="outline" 
-                              className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
-                              onClick={() => handleAddProduct(category.name)}
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Adicionar novo produto
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
+                              
+                              {/* Botão para adicionar novo produto */}
+                              <div className="mt-4">
+                                <Button 
+                                  variant="outline" 
+                                  className="w-full border-dashed border-2 border-amber-300 hover:border-amber-400 text-amber-600 hover:text-amber-700 dark:border-amber-700 dark:hover:border-amber-600 dark:text-amber-500 dark:hover:text-amber-400 h-14"
+                                  onClick={() => handleAddProduct(category.name)}
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Adicionar novo produto
+                                </Button>
+                              </div>
+                            </div>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
                     </div>
                   )}
                 </Draggable>

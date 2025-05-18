@@ -8,14 +8,8 @@ import { Card } from "@/components/ui/card";
 const Menu = () => {
   return (
     <MenuTabs>
-      <TabsContent value="categorias" className="mt-4">
+      <TabsContent value="menu" className="mt-4">
         <UnifiedMenuView />
-      </TabsContent>
-      
-      <TabsContent value="produtos" className="mt-4">
-        <Card className="p-6">
-          <UnifiedMenuView />
-        </Card>
       </TabsContent>
       
       <TabsContent value="adicionais" className="mt-4">
