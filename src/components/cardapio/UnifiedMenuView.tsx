@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, ChevronRight, Grid } from "lucide-react";
+import { Edit, ChevronRight, Grid, Plus } from "lucide-react";
 import { Category } from "./CategoryList";
 import { Product } from "./ProductList";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -244,86 +244,103 @@ export function UnifiedMenuView() {
   }, [categoryList]);
 
   return (
-    <Card className="p-6">
+    <div className="space-y-8">
       <div className="flex justify-between mb-6">
         <h2 className="text-xl font-bold">Categorias do Cardápio</h2>
-        <Button onClick={handleAddCategory}>Nova Categoria</Button>
+        <Button onClick={handleAddCategory}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nova Categoria
+        </Button>
       </div>
 
-      <div className="space-y-8">
-        {activeCategories.map((category) => (
-          <div key={category.id} className="space-y-4">
-            <div className="flex items-center justify-between bg-accent/30 p-3 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Grid className="h-5 w-5" />
-                <h3 className="text-lg font-medium">{category.name}</h3>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
-                <Edit className="h-4 w-4 mr-1" />
-                Editar
+      {activeCategories.map((category) => (
+        <div key={category.id} className="space-y-4">
+          <div className="flex items-center justify-between bg-accent/30 p-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Grid className="h-5 w-5" />
+              <h3 className="text-lg font-medium">{category.name}</h3>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
+              <Edit className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+
+          <div className="pl-2 space-y-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-md font-medium text-muted-foreground pl-2">Produtos</h4>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleAddProduct(category.name)}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Novo Produto
               </Button>
             </div>
-
-            <div className="pl-4 space-y-2">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-md font-medium text-muted-foreground">Produtos</h4>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleAddProduct(category.name)}
-                >
-                  Novo Produto
-                </Button>
-              </div>
-              
-              {productsByCategory[category.name]?.length > 0 ? (
-                <div className="space-y-4">
-                  {productsByCategory[category.name].map((product) => (
-                    <div 
-                      key={product.id} 
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={product.imageUrl} alt={product.name} />
-                          <AvatarFallback>{product.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            
+            {productsByCategory[category.name]?.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {productsByCategory[category.name].map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="flex bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden animate-fade-in"
+                  >
+                    <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 relative">
+                      <div className="absolute inset-0">
+                        <Avatar className="h-full w-full rounded-none">
+                          <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
+                          <AvatarFallback className="rounded-none h-full text-lg">
+                            {product.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
                         </Avatar>
-                        
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{product.name}</h4>
-                            {product.featured && (
-                              <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-300">
-                                Destaque
-                              </Badge>
-                            )}
-                            {!product.available && (
-                              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-300">
-                                Indisponível
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{product.description}</p>
-                          <p className="text-sm font-medium text-primary">{product.price}</p>
-                        </div>
                       </div>
-                      
-                      <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute bottom-1 right-1 bg-white/80 dark:bg-gray-800/80 rounded-full h-7 w-7"
+                        onClick={() => handleEditProduct(product)}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 border rounded-lg bg-muted/20">
-                  <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
-                </div>
-              )}
-            </div>
+                    
+                    <div className="flex-grow p-4">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-lg">{product.name}</h3>
+                          {product.featured && (
+                            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-300">
+                              Destaque
+                            </Badge>
+                          )}
+                          {!product.available && (
+                            <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-300">
+                              Indisponível
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                        
+                        <div className="mt-2">
+                          <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
+                            {product.price}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 border rounded-lg bg-muted/20">
+                <p className="text-muted-foreground">Nenhum produto nesta categoria</p>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
 
       <CategoryFormModal
         isOpen={isCategoryModalOpen}
@@ -348,6 +365,6 @@ export function UnifiedMenuView() {
         itemName={itemToDelete?.item?.name || ""}
         itemType={itemToDelete?.type === 'category' ? 'categoria' : 'produto'}
       />
-    </Card>
+    </div>
   );
 }
