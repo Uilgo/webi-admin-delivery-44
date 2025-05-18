@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2, Copy, Move } from "lucide-react";
-import { Category } from "./CategoryList";
-import { Product } from "./ProductList";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { CategoryFormModal } from "./CategoryFormModal";
 import { ProductFormModal } from "./ProductFormModal";
-import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Dados de exemplo de categorias (igual ao CategoryList.tsx)
 const categories: Category[] = [
@@ -156,10 +156,12 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
           {/* Imagem do produto com bordas arredondadas em 8px */}
           <div className="flex-shrink-0 w-20 h-20 relative">
             <Avatar className="h-full w-full rounded-lg overflow-hidden">
-              <AvatarImage src={product.imageUrl} alt={product.name} className="object-cover" />
-              <AvatarFallback className="rounded-lg h-full text-lg">
-                {product.name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
+              <AvatarImage 
+                src={product.imageUrl} 
+                alt={product.name} 
+                className="object-cover"
+              />
+              <AvatarFallback className="rounded-lg">{product.name.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
           </div>
           
@@ -167,7 +169,16 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
           <div className="flex-grow p-3 overflow-hidden">
             <div className="flex flex-col h-full">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium text-lg truncate">{product.name}</h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h3 className="font-medium text-lg truncate">{product.name}</h3>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{product.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 {product.featured && (
                   <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300">
                     Destaque
@@ -175,7 +186,18 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
                 )}
               </div>
               
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2 overflow-hidden">{product.description}</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2 overflow-hidden">
+                      {product.description || "Sem descrição"}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>{product.description || "Sem descrição"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               <div className="mt-2">
                 <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
@@ -185,30 +207,15 @@ function ProductCard({ product, onEdit, onDuplicate, onDelete }) {
             </div>
           </div>
           
-          {/* Botões de ação (vertical) */}
-          <div className="flex flex-col gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={() => onEdit(product)}
-            >
-              <Edit className="h-4 w-4" />
+          {/* Ações do produto */}
+          <div className="flex-shrink-0 flex flex-col gap-1">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(product)}>
+              <Edit className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={() => onDuplicate(product)}
-            >
-              <Copy className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => onDuplicate(product)}>
+              <Copy className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={() => onDelete(product)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => onDelete(product)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>

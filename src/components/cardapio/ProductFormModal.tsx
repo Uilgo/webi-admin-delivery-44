@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,12 +25,17 @@ import * as z from "zod";
 import { Product } from "./ProductList";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trash2 } from "lucide-react";
+import { Trash2, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Updated schema without category (it will be provided by the parent component)
 const formSchema = z.object({
-  name: z.string().min(1, { message: "Nome é obrigatório" }),
-  description: z.string().optional(),
+  name: z.string().min(1, { message: "Nome é obrigatório" }).max(50, { 
+    message: "Nome deve ter no máximo 50 caracteres" 
+  }),
+  description: z.string().max(200, { 
+    message: "Descrição deve ter no máximo 200 caracteres" 
+  }).optional(),
   price: z.string().min(1, { message: "Preço é obrigatório" }),
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
@@ -46,15 +52,6 @@ interface ProductFormModalProps {
   onSave: (product: Product) => void;
   onDelete?: () => void;
 }
-
-// Categorias de exemplo
-const categories = [
-  "Pizzas Tradicionais",
-  "Pizzas Premium",
-  "Bebidas",
-  "Sobremesas",
-  "Combos",
-];
 
 export function ProductFormModal({
   isOpen,
@@ -107,7 +104,7 @@ export function ProductFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar Produto" : "Novo Produto"}
@@ -115,16 +112,16 @@ export function ProductFormModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="flex items-center justify-center mb-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
               <div className="flex flex-col items-center">
-                <Avatar className="w-20 h-20 rounded-lg">
+                <Avatar className="w-24 h-24 rounded-lg">
                   <AvatarImage src={imagePreview || ""} alt="Preview" />
                   <AvatarFallback className="bg-muted text-lg rounded-lg">
                     {form.watch("name")?.substring(0, 2).toUpperCase() || "IMG"}
                   </AvatarFallback>
                 </Avatar>
-                <label className="mt-2 cursor-pointer text-primary text-sm">
+                <label className="mt-3 cursor-pointer text-primary text-sm">
                   <span>Alterar foto</span>
                   <input 
                     type="file" 
@@ -136,16 +133,31 @@ export function ProductFormModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      Nome
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Máximo de 50 caracteres. O nome será truncado no card caso ultrapasse o espaço disponível.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do produto" {...field} />
+                      <Input placeholder="Nome do produto" {...field} maxLength={50} />
                     </FormControl>
+                    <FormDescription>
+                      {field.value?.length || 0}/50 caracteres
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -183,20 +195,37 @@ export function ProductFormModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descrição</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    Descrição
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Máximo de 200 caracteres. A descrição será limitada a 2 linhas no card.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Descrição do produto (opcional)"
                       {...field}
                       value={field.value || ""}
+                      maxLength={200}
+                      className="resize-none min-h-[100px]"
                     />
                   </FormControl>
+                  <FormDescription>
+                    {field.value?.length || 0}/200 caracteres
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormField
                 control={form.control}
                 name="active"
@@ -261,7 +290,7 @@ export function ProductFormModal({
               />
             </div>
 
-            <DialogFooter className="flex justify-between sm:justify-between">
+            <DialogFooter className="flex justify-between sm:justify-between pt-4">
               {isEditing && onDelete && (
                 <Button variant="destructive" type="button" onClick={onDelete} className="mr-auto">
                   <Trash2 className="h-4 w-4 mr-2" />
