@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -12,8 +13,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MenuFilters } from "./MenuFilters";
 import { useState, useMemo } from "react";
+import { format } from "date-fns";
+import { ProductFormModal } from "./ProductFormModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   category: string;
@@ -22,6 +26,9 @@ interface Product {
   featured: boolean;
   available: boolean;
   description?: string;
+  imageUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const products: Product[] = [
@@ -33,7 +40,10 @@ const products: Product[] = [
     active: true,
     featured: true,
     available: true,
-    description: "Molho de tomate, mussarela, manjericão fresco e azeite"
+    description: "Molho de tomate, mussarela, manjericão fresco e azeite",
+    imageUrl: "/placeholder.svg",
+    createdAt: new Date(2025, 0, 15),
+    updatedAt: new Date(2025, 3, 5),
   },
   {
     id: "2",
@@ -43,7 +53,10 @@ const products: Product[] = [
     active: true,
     featured: false,
     available: true,
-    description: "Molho de tomate, mussarela e calabresa fatiada"
+    description: "Molho de tomate, mussarela e calabresa fatiada",
+    imageUrl: "/placeholder.svg",
+    createdAt: new Date(2025, 0, 20),
+    updatedAt: new Date(2025, 2, 12),
   },
   {
     id: "3",
@@ -53,6 +66,9 @@ const products: Product[] = [
     active: true,
     featured: true,
     available: false,
+    imageUrl: "/placeholder.svg",
+    createdAt: new Date(2025, 0, 22),
+    updatedAt: new Date(2025, 1, 15),
   },
   {
     id: "4",
@@ -62,6 +78,9 @@ const products: Product[] = [
     active: true,
     featured: false,
     available: true,
+    imageUrl: "/placeholder.svg",
+    createdAt: new Date(2025, 1, 5),
+    updatedAt: new Date(2025, 1, 5),
   },
   {
     id: "5",
@@ -71,6 +90,9 @@ const products: Product[] = [
     active: true,
     featured: false,
     available: true,
+    imageUrl: "/placeholder.svg",
+    createdAt: new Date(2025, 1, 10),
+    updatedAt: new Date(2025, 3, 20),
   },
 ];
 
@@ -78,6 +100,8 @@ export function ProductList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("nome_asc");
   const [filter, setFilter] = useState("todos");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -116,6 +140,10 @@ export function ProductList() {
           return a.price.localeCompare(b.price);
         case "preco_desc":
           return b.price.localeCompare(a.price);
+        case "data_criacao":
+          return a.createdAt.getTime() - b.createdAt.getTime();
+        case "data_atualizacao":
+          return b.updatedAt.getTime() - a.updatedAt.getTime();
         default:
           return 0;
       }
@@ -124,30 +152,58 @@ export function ProductList() {
     return result;
   }, [searchTerm, sortBy, filter]);
 
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveProduct = (product: Product) => {
+    // Aqui seria implementada a lógica para salvar o produto
+    console.log("Salvando produto:", product);
+    setIsModalOpen(false);
+  };
+
   return (
     <Card>
       <div className="p-6">
-        <MenuFilters 
-          type="produtos"
-          onSearch={setSearchTerm}
-          onSort={setSortBy}
-          onFilter={setFilter}
-        />
+        <div className="flex justify-between mb-4">
+          <MenuFilters 
+            type="produtos"
+            onSearch={setSearchTerm}
+            onSort={setSortBy}
+            onFilter={setFilter}
+          />
+          <Button onClick={handleAddProduct}>Novo Produto</Button>
+        </div>
         
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Imagem</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden md:table-cell">Categoria</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead className="hidden md:table-cell">Status</TableHead>
+                <TableHead className="hidden lg:table-cell">Criado Em</TableHead>
+                <TableHead className="hidden lg:table-cell">Atualizado Em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell>
+                    <Avatar>
+                      <AvatarImage src={product.imageUrl} alt={product.name} />
+                      <AvatarFallback>{product.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </TableCell>
                   <TableCell className="font-medium flex items-center gap-2">
                     {product.name}
                     {product.featured && (
@@ -166,8 +222,10 @@ export function ProductList() {
                       </span>
                     </div>
                   </TableCell>
+                  <TableCell className="hidden lg:table-cell">{format(product.createdAt, 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{format(product.updatedAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Editar</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>Editar</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -175,6 +233,13 @@ export function ProductList() {
           </Table>
         </div>
       </div>
+
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={editingProduct}
+        onSave={handleSaveProduct}
+      />
     </Card>
   );
 }

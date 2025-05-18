@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { OrderList } from "@/components/orders/OrderList";
 import { OrderViewSelector } from "@/components/orders/OrderViewSelector";
-import { OrderCard, OrderStatus } from "@/components/orders/OrderCard";
+import { OrderCard, OrderStatus, Order } from "@/components/orders/OrderCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OrderDetailsModal } from "@/components/orders/OrderDetailsModal";
+import { StatusChangeConfirmation } from "@/components/orders/StatusChangeConfirmation";
 
 // Lista de status para pedidos
 const orderStatusList: OrderStatus[] = [
@@ -109,9 +111,46 @@ const mockOrders = [
 
 const Orders = () => {
   const [view, setView] = useState<"card" | "list">("card");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isStatusChangeModalOpen, setIsStatusChangeModalOpen] = useState(false);
+  const [statusChange, setStatusChange] = useState<{
+    orderId: string;
+    fromStatus: string;
+    toStatus: string;
+  } | null>(null);
   
   const handleViewChange = (newView: "card" | "list") => {
     setView(newView);
+  };
+
+  const handleViewDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleStatusChange = (orderId: string, newStatus: string) => {
+    const order = mockOrders.find((o) => o.id === orderId);
+    if (order) {
+      setStatusChange({
+        orderId,
+        fromStatus: order.status,
+        toStatus: newStatus,
+      });
+      setSelectedOrder(order);
+      setIsStatusChangeModalOpen(true);
+    }
+  };
+
+  const confirmStatusChange = () => {
+    if (statusChange) {
+      // Na implementação real, aqui teria uma chamada API para atualizar o status
+      const orderIndex = mockOrders.findIndex(o => o.id === statusChange.orderId);
+      if (orderIndex >= 0) {
+        mockOrders[orderIndex].status = statusChange.toStatus;
+      }
+    }
+    setIsStatusChangeModalOpen(false);
   };
 
   return (
@@ -142,8 +181,8 @@ const Orders = () => {
                   key={order.id} 
                   order={order} 
                   statusList={orderStatusList} 
-                  onStatusChange={() => {}} 
-                  onViewDetails={() => {}}
+                  onStatusChange={handleStatusChange} 
+                  onViewDetails={handleViewDetails}
                 />
               ))}
             </div>
@@ -163,8 +202,8 @@ const Orders = () => {
                       key={order.id} 
                       order={order} 
                       statusList={orderStatusList} 
-                      onStatusChange={() => {}} 
-                      onViewDetails={() => {}}
+                      onStatusChange={handleStatusChange}
+                      onViewDetails={handleViewDetails}
                     />
                   ))}
               </div>
@@ -172,6 +211,23 @@ const Orders = () => {
           </TabsContent>
         ))}
       </Tabs>
+
+      <OrderDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        order={selectedOrder}
+        statusList={orderStatusList}
+        onStatusChange={handleStatusChange}
+      />
+
+      <StatusChangeConfirmation
+        isOpen={isStatusChangeModalOpen}
+        onClose={() => setIsStatusChangeModalOpen(false)}
+        onConfirm={confirmStatusChange}
+        orderId={statusChange?.orderId || ""}
+        fromStatus={orderStatusList.find(s => statusChange?.fromStatus === s.id)}
+        toStatus={orderStatusList.find(s => statusChange?.toStatus === s.id)}
+      />
     </div>
   );
 };

@@ -13,8 +13,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MenuFilters } from "./MenuFilters";
 import { useState, useMemo } from "react";
+import { format } from "date-fns";
+import { AdditionalFormModal } from "./AdditionalFormModal";
 
-interface Additional {
+export interface Additional {
   id: string;
   name: string;
   group: string;
@@ -22,6 +24,8 @@ interface Additional {
   active: boolean;
   isRequired: boolean;
   description?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const additionals: Additional[] = [
@@ -32,7 +36,9 @@ const additionals: Additional[] = [
     price: "R$ 5,00",
     active: true,
     isRequired: false,
-    description: "30g de bacon crocante"
+    description: "30g de bacon crocante",
+    createdAt: new Date(2025, 0, 15),
+    updatedAt: new Date(2025, 2, 5),
   },
   {
     id: "2",
@@ -41,7 +47,9 @@ const additionals: Additional[] = [
     price: "R$ 8,00",
     active: true,
     isRequired: false,
-    description: "Borda recheada com catupiry"
+    description: "Borda recheada com catupiry",
+    createdAt: new Date(2025, 0, 20),
+    updatedAt: new Date(2025, 1, 12),
   },
   {
     id: "3",
@@ -50,7 +58,9 @@ const additionals: Additional[] = [
     price: "R$ 2,00",
     active: true,
     isRequired: false,
-    description: "Molho de alho artesanal"
+    description: "Molho de alho artesanal",
+    createdAt: new Date(2025, 0, 22),
+    updatedAt: new Date(2025, 3, 1),
   },
   {
     id: "4",
@@ -59,7 +69,9 @@ const additionals: Additional[] = [
     price: "R$ 6,00",
     active: true,
     isRequired: false,
-    description: "Várias opções disponíveis"
+    description: "Várias opções disponíveis",
+    createdAt: new Date(2025, 1, 5),
+    updatedAt: new Date(2025, 1, 5),
   },
   {
     id: "5",
@@ -68,7 +80,9 @@ const additionals: Additional[] = [
     price: "Variável",
     active: true,
     isRequired: true,
-    description: "Pequena, Média ou Grande"
+    description: "Pequena, Média ou Grande",
+    createdAt: new Date(2025, 1, 10),
+    updatedAt: new Date(2025, 3, 20),
   },
 ];
 
@@ -76,6 +90,8 @@ export function AdditionalsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("nome_asc");
   const [filter, setFilter] = useState("todos");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAdditional, setEditingAdditional] = useState<Additional | null>(null);
 
   const filteredAdditionals = useMemo(() => {
     let result = [...additionals];
@@ -86,6 +102,7 @@ export function AdditionalsList() {
       result = result.filter(
         item => 
           item.name.toLowerCase().includes(searchLower) || 
+          item.group.toLowerCase().includes(searchLower) ||
           (item.description || "").toLowerCase().includes(searchLower)
       );
     }
@@ -114,6 +131,10 @@ export function AdditionalsList() {
           return a.price.localeCompare(b.price);
         case "preco_desc":
           return b.price.localeCompare(a.price);
+        case "data_criacao":
+          return a.createdAt.getTime() - b.createdAt.getTime();
+        case "data_atualizacao":
+          return b.updatedAt.getTime() - a.updatedAt.getTime();
         default:
           return 0;
       }
@@ -122,15 +143,34 @@ export function AdditionalsList() {
     return result;
   }, [searchTerm, sortBy, filter]);
 
+  const handleAddAdditional = () => {
+    setEditingAdditional(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditAdditional = (additional: Additional) => {
+    setEditingAdditional(additional);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveAdditional = (additional: Additional) => {
+    // Aqui seria implementada a lógica para salvar o adicional
+    console.log("Salvando adicional:", additional);
+    setIsModalOpen(false);
+  };
+
   return (
     <Card>
       <div className="p-6">
-        <MenuFilters 
-          type="adicionais"
-          onSearch={setSearchTerm}
-          onSort={setSortBy}
-          onFilter={setFilter}
-        />
+        <div className="flex justify-between mb-4">
+          <MenuFilters 
+            type="adicionais"
+            onSearch={setSearchTerm}
+            onSort={setSortBy}
+            onFilter={setFilter}
+          />
+          <Button onClick={handleAddAdditional}>Novo Adicional</Button>
+        </div>
         
         <div className="rounded-md border">
           <Table>
@@ -140,6 +180,8 @@ export function AdditionalsList() {
                 <TableHead className="hidden md:table-cell">Grupo</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead className="hidden md:table-cell">Status</TableHead>
+                <TableHead className="hidden lg:table-cell">Criado Em</TableHead>
+                <TableHead className="hidden lg:table-cell">Atualizado Em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -159,8 +201,10 @@ export function AdditionalsList() {
                   <TableCell className="hidden md:table-cell">
                     <Switch checked={item.active} />
                   </TableCell>
+                  <TableCell className="hidden lg:table-cell">{format(item.createdAt, 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{format(item.updatedAt, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Editar</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditAdditional(item)}>Editar</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -168,6 +212,13 @@ export function AdditionalsList() {
           </Table>
         </div>
       </div>
+
+      <AdditionalFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        additional={editingAdditional}
+        onSave={handleSaveAdditional}
+      />
     </Card>
   );
 }
