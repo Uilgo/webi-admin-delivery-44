@@ -57,13 +57,16 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Dashboard</h2>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-4 border-b border-border">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Visão geral do seu negócio</p>
+        </div>
         <PeriodFilter onFilterChange={handlePeriodChange} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
           title="Total de Pedidos" 
           value={currentData.orders}
@@ -93,9 +96,13 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SalesChart period={period} className="lg:col-span-2" />
-        <ConversionRate period={period} />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2">
+          <SalesChart period={period} />
+        </div>
+        <div className="xl:col-span-1">
+          <ConversionRate period={period} />
+        </div>
       </div>
 
       <RecentOrders />

@@ -4,13 +4,24 @@ import { Link } from "react-router-dom";
 
 const Register = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
-      <div className="mb-6">
-        <Link to="/" className="logo-text text-webi-600">
-          Webi<span>Delivery</span>
-        </Link>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-4 py-12">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center space-y-2">
+          <Link to="/" className="inline-block">
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Webi<span className="text-yellow-500">Delivery</span>
+            </div>
+          </Link>
+          <p className="text-muted-foreground">Crie sua conta e comece hoje mesmo</p>
+        </div>
+        <RegisterForm />
+        <div className="text-center text-sm text-muted-foreground">
+          Já tem uma conta?{" "}
+          <Link to="/login" className="text-primary hover:underline font-medium">
+            Faça login
+          </Link>
+        </div>
       </div>
-      <RegisterForm />
     </div>
   );
 };

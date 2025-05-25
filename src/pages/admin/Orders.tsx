@@ -52,9 +52,12 @@ const Orders = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h2 className="text-2xl font-bold">Pedidos</h2>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-4 border-b border-border">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Gerenciar Pedidos</h1>
+          <p className="text-muted-foreground mt-1">Acompanhe e gerencie todos os pedidos do seu estabelecimento</p>
+        </div>
         <OrderFilters 
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
